@@ -7,3 +7,4 @@ playwright-report/
 *.sqlite-wal
 .env
 .env.*
+!.env.example
