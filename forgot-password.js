@@ -1,0 +1,5 @@
+(function(){
+  const form=document.querySelector('form'),button=form?.querySelector('[type="submit"]');if(!form||!button)return;
+  const message=document.createElement("div");message.style.cssText="display:none;margin-bottom:12px;padding:10px;border-radius:6px;background:#f0fdf4;color:#166534;font-size:13px";form.prepend(message);
+  form.onsubmit=async event=>{event.preventDefault();button.disabled=true;button.textContent="Sending…";message.style.display="none";try{const response=await fetch("/api/password/forgot",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:form.email.value.trim()})}),data=await response.json();if(!response.ok)throw new Error(data.error);message.textContent=data.message;message.style.display="block";form.reset()}catch(error){message.style.background="#fef2f2";message.style.color="#991b1b";message.textContent=error.message||"Reset request failed.";message.style.display="block"}finally{button.disabled=false;button.textContent="Email Password Reset Link"}};
+})();

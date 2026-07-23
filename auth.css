@@ -1,0 +1,13 @@
+:root{--red:#E31937;--ink:#171a20;--line:#dfe3e8}
+*{box-sizing:border-box}
+body{margin:0;background:#f5f7fa;color:var(--ink);font:14px Inter,Arial,sans-serif}
+.auth-shell{min-height:100vh;padding:24px;display:grid;place-items:center}
+.auth-card{width:min(460px,100%);padding:34px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 18px 50px #11182714}
+.auth-logo{color:var(--ink);font-size:25px;font-weight:800;letter-spacing:.35em;text-decoration:none}
+.auth-card h1{margin:30px 0 8px}.auth-card p{color:#68707d;line-height:1.6}
+.auth-card form{margin:24px 0;display:grid;gap:16px}.auth-card label{display:grid;gap:7px;font-weight:600}
+.auth-card input{height:46px;padding:0 13px;border:1px solid #cbd2da;border-radius:7px;font:inherit}
+.auth-card input:focus{outline:2px solid #E3193733;border-color:var(--red)}
+.auth-card button{height:46px;border:0;border-radius:7px;background:var(--red);color:#fff;font-weight:700;cursor:pointer}
+.auth-card>a:last-child{color:var(--red);text-decoration:none}
+[data-message]{min-height:18px;font-size:13px}

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="H0YLeIdQ9yp26PQBGgraeBBB0j0zKll1IHYpgim2">
+
+        <title>Create Account - StockPrime</title>
+
+        <!-- Favicon -->
+                    <link rel="icon" type="image/png" href="images/stockprime-logo.png">
+        
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.bunny.net/">
+        <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700&amp;display=swap" rel="stylesheet" />
+
+    <!-- Scripts -->
+        <link rel="preload" as="style" href="build/assets/app-BUT93izI.css" /><link rel="stylesheet" href="build/assets/app-BUT93izI.css" /><link rel="stylesheet" href="auth-red.css" /><script src="runtime-guard.js"></script>
+    <script>
+        // Initialize theme based on system preference
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme) {
+                // Use saved preference
+                if (savedTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } else {
+                // Use system preference
+                if (prefersDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+        }
+        initTheme();
+        
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                if (e.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+        });
+    </script>
+</head>
+<body class="font-sans antialiased bg-gray-50 dark:bg-blue-900 text-black dark:text-white transition-colors duration-200">
+    <div class="min-h-screen flex flex-col">
+        <!-- Enhanced Navigation -->
+        <nav class="bg-white dark:bg-blue-800 border-b border-gray-100 dark:border-blue-700 shadow-sm transition-colors duration-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-14">
+                    <!-- Logo -->
+                    <div class="flex items-center">
+                        <a href="index.html" class="auth-brand-frame group" aria-label="StockPrime home">
+                                                            <img src="images/stockprime-logo.png" alt="StockPrime">
+                                                    </a>
+                    </div>
+
+                    <!-- Right Side Links -->
+                    <div class="flex items-center space-x-4 md:space-x-6">
+                        <a href="index.html" class="hidden md:block text-xs font-medium text-black dark:text-blue-100 hover:text-gray-600 dark:hover:text-white transition-colors duration-200">Home</a>
+                        <a href="stocks.html" class="hidden md:block text-xs font-medium text-black dark:text-blue-100 hover:text-gray-600 dark:hover:text-white transition-colors duration-200">Markets</a>
+                                                                                    <a href="login.html" class="hidden sm:block text-xs font-medium text-black dark:text-blue-100 hover:text-gray-600 dark:hover:text-white transition-colors duration-200">Sign In</a>
+                                                                    <a href="register.html" class="hidden sm:block text-xs font-medium text-black dark:text-blue-100 hover:text-gray-600 dark:hover:text-white transition-colors duration-200">Register</a>
+                                                                                                            
+                        <!-- Theme Toggle (Visible on all screen sizes) -->
+                        <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-blue-700 transition-colors duration-500" aria-label="Toggle theme">
+                            <i data-lucide="sun" class="w-4 h-4 text-gray-700 dark:text-blue-100 dark:hidden"></i>
+                            <i data-lucide="moon" class="w-4 h-4 text-blue-100 hidden dark:block"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Enhanced Main Content -->
+        <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div class="w-full max-w-sm">
+                <div class="bg-white dark:bg-blue-700 rounded-xl shadow-sm border border-gray-100 dark:border-blue-600 overflow-hidden transition-colors duration-200">
+        <!-- Enhanced Header -->
+        <div class="px-6 py-6 text-center">
+            <h1 class="text-xl font-light text-black dark:text-white mb-1">Create Account</h1>
+            <p class="text-xs text-gray-500 dark:text-blue-100">Create your account and choose a private 6-digit login code</p>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="px-6 pb-6">
+            <form method="POST" action="#" class="space-y-4">
+                <input type="hidden" name="_token" value="H0YLeIdQ9yp26PQBGgraeBBB0j0zKll1IHYpgim2" autocomplete="off">
+                <!-- First Name -->
+                <div>
+                    <label for="first_name" class="block text-xs font-medium text-black dark:text-white mb-1">First Name</label>
+                    <input type="text"
+                           id="first_name"
+                           name="first_name"
+                           value=""
+                           required
+                           autofocus
+                           autocomplete="given-name"
+                           class="w-full px-3 py-2.5 border border-gray-300 dark:border-blue-600 dark:bg-blue-600 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 ">
+                                    </div>
+
+                <!-- Last Name -->
+                <div>
+                    <label for="last_name" class="block text-xs font-medium text-black dark:text-white mb-1">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" required autocomplete="family-name"
+                           class="w-full px-3 py-2.5 border border-gray-300 dark:border-blue-600 dark:bg-blue-600 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 ">
+                </div>
+
+                <!-- Email Address -->
+                <div>
+                    <label for="email" class="block text-xs font-medium text-black dark:text-white mb-1">Email</label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           value="" 
+                           required 
+                           autocomplete="username" 
+                           class="w-full px-3 py-2.5 border border-gray-300 dark:border-blue-600 dark:bg-blue-600 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 ">
+                                    </div>
+
+                <!-- Phone Number -->
+                <div>
+                    <label for="phone" class="block text-xs font-medium text-black dark:text-white mb-1">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" required autocomplete="tel" placeholder="+1 555 123 4567"
+                           class="w-full px-3 py-2.5 border border-gray-300 dark:border-blue-600 dark:bg-blue-600 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 ">
+                </div>
+
+                <!-- Login Code -->
+                <div>
+                    <label for="login_code" class="block text-xs font-medium text-black dark:text-white mb-1">Create Login Code</label>
+                    <input type="password" 
+                           id="login_code" 
+                           name="login_code" 
+                           required inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6"
+                           autocomplete="new-password" placeholder="6 digits"
+                           class="w-full px-3 py-2.5 border border-gray-300 dark:border-blue-600 dark:bg-blue-600 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 ">
+                    <p class="mt-1 text-[10px] text-gray-500 dark:text-blue-200">You will use this code whenever you sign in.</p></div>
+
+                <!-- Confirm Login Code -->
+                <div>
+                    <label for="login_code_confirmation" class="block text-xs font-medium text-black dark:text-white mb-1">Confirm Login Code</label>
+                    <input type="password" 
+                           id="login_code_confirmation" 
+                           name="login_code_confirmation" 
+                           required inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6"
+                           autocomplete="new-password" placeholder="Repeat 6 digits"
+                           class="w-full px-3 py-2.5 border border-gray-300 dark:border-blue-600 dark:bg-blue-600 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 ">
+                                    </div>
+
+                <!-- Country -->
+                <div>
+                    <label for="country" class="block text-xs font-medium text-black dark:text-white mb-1">Country</label>
+                    <select id="country" 
+                            name="country" 
+                            class="w-full px-3 py-2.5 border border-gray-300 dark:border-blue-600 dark:bg-blue-600 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 ">
+                        <option value="">Select Country</option>
+                    </select>
+                                    </div>
+
+                <!-- Currency -->
+                <div>
+                    <label for="currency" class="block text-xs font-medium text-black dark:text-white mb-1">Preferred Currency</label>
+                    <select id="currency" 
+                            name="currency" 
+                            class="w-full px-3 py-2.5 border border-gray-300 dark:border-blue-600 dark:bg-blue-600 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 ">
+                        <option value="USD" >USD - US Dollar ($)</option>
+                        <option value="EUR" >EUR - Euro (€)</option>
+                        <option value="GBP" >GBP - British Pound (£)</option>
+                        <option value="JPY" >JPY - Japanese Yen (¥)</option>
+                        <option value="AUD" >AUD - Australian Dollar (A$)</option>
+                        <option value="CAD" >CAD - Canadian Dollar (C$)</option>
+                        <option value="CHF" >CHF - Swiss Franc (CHF)</option>
+                        <option value="CNY" >CNY - Chinese Yuan (¥)</option>
+                        <option value="INR" >INR - Indian Rupee (₹)</option>
+                        <option value="KRW" >KRW - South Korean Won (₩)</option>
+                        <option value="MXN" >MXN - Mexican Peso ($)</option>
+                        <option value="BRL" >BRL - Brazilian Real (R$)</option>
+                        <option value="ZAR" >ZAR - South African Rand (R)</option>
+                        <option value="RUB" >RUB - Russian Ruble (₽)</option>
+                        <option value="SEK" >SEK - Swedish Krona (kr)</option>
+                        <option value="NOK" >NOK - Norwegian Krone (kr)</option>
+                        <option value="DKK" >DKK - Danish Krone (kr)</option>
+                        <option value="SGD" >SGD - Singapore Dollar (S$)</option>
+                        <option value="HKD" >HKD - Hong Kong Dollar (HK$)</option>
+                        <option value="NZD" >NZD - New Zealand Dollar (NZ$)</option>
+                        <option value="TRY" >TRY - Turkish Lira (₺)</option>
+                        <option value="PLN" >PLN - Polish Zloty (zł)</option>
+                        <option value="THB" >THB - Thai Baht (฿)</option>
+                        <option value="IDR" >IDR - Indonesian Rupiah (Rp)</option>
+                        <option value="MYR" >MYR - Malaysian Ringgit (RM)</option>
+                        <option value="PHP" >PHP - Philippine Peso (₱)</option>
+                        <option value="CZK" >CZK - Czech Koruna (Kč)</option>
+                        <option value="ILS" >ILS - Israeli Shekel (₪)</option>
+                        <option value="CLP" >CLP - Chilean Peso ($)</option>
+                        <option value="AED" >AED - UAE Dirham (د.إ)</option>
+                    </select>
+                                    </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <label for="referral_code" class="block text-xs font-medium text-black dark:text-white mb-1">Referral Code (Optional)</label>
+                    <p class="text-xs text-gray-500 dark:text-blue-100 mb-2">Have a referral code? Enter it here to receive your welcome bonus and link your account to the referring user.</p>
+                    <input type="text" id="referral_code" name="referral_code" autocomplete="off" placeholder="REF-834729"
+                           class="w-full px-3 py-2.5 border border-gray-300 dark:border-blue-600 dark:bg-blue-600 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200 uppercase">
+                    <div data-referral-feedback class="text-xs mt-2" aria-live="polite"></div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-blue-50 text-white dark:text-blue-900 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200">
+                        Create Account
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Login Link -->
+        <div class="px-6 py-4 bg-gray-50 dark:bg-blue-600 border-t border-gray-100 dark:border-blue-500 text-center transition-colors duration-200">
+            <p class="text-xs text-gray-500 dark:text-blue-100">
+                Already have an account?
+                <a href="login.html" class="text-black dark:text-white hover:text-gray-600 dark:hover:text-blue-200 font-medium transition-colors duration-200">
+                    Sign in
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Populate countries dropdown immediately on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // List of countries
+            const countries = [
+            {code: "AF", name: "Afghanistan"}, {code: "AL", name: "Albania"}, {code: "DZ", name: "Algeria"},
+            {code: "AS", name: "American Samoa"}, {code: "AD", name: "Andorra"}, {code: "AO", name: "Angola"},
+            {code: "AI", name: "Anguilla"}, {code: "AG", name: "Antigua and Barbuda"}, {code: "AR", name: "Argentina"},
+            {code: "AM", name: "Armenia"}, {code: "AW", name: "Aruba"}, {code: "AU", name: "Australia"},
+            {code: "AT", name: "Austria"}, {code: "AZ", name: "Azerbaijan"}, {code: "BS", name: "Bahamas"},
+            {code: "BH", name: "Bahrain"}, {code: "BD", name: "Bangladesh"}, {code: "BB", name: "Barbados"},
+            {code: "BY", name: "Belarus"}, {code: "BE", name: "Belgium"}, {code: "BZ", name: "Belize"},
+            {code: "BJ", name: "Benin"}, {code: "BM", name: "Bermuda"}, {code: "BT", name: "Bhutan"},
+            {code: "BO", name: "Bolivia"}, {code: "BA", name: "Bosnia and Herzegovina"}, {code: "BW", name: "Botswana"},
+            {code: "BR", name: "Brazil"}, {code: "BN", name: "Brunei"}, {code: "BG", name: "Bulgaria"},
+            {code: "BF", name: "Burkina Faso"}, {code: "BI", name: "Burundi"}, {code: "KH", name: "Cambodia"},
+            {code: "CM", name: "Cameroon"}, {code: "CA", name: "Canada"}, {code: "CV", name: "Cape Verde"},
+            {code: "KY", name: "Cayman Islands"}, {code: "CF", name: "Central African Republic"}, {code: "TD", name: "Chad"},
+            {code: "CL", name: "Chile"}, {code: "CN", name: "China"}, {code: "CO", name: "Colombia"},
+            {code: "KM", name: "Comoros"}, {code: "CG", name: "Congo"}, {code: "CR", name: "Costa Rica"},
+            {code: "HR", name: "Croatia"}, {code: "CU", name: "Cuba"}, {code: "CY", name: "Cyprus"},
+            {code: "CZ", name: "Czech Republic"}, {code: "DK", name: "Denmark"}, {code: "DJ", name: "Djibouti"},
+            {code: "DM", name: "Dominica"}, {code: "DO", name: "Dominican Republic"}, {code: "EC", name: "Ecuador"},
+            {code: "EG", name: "Egypt"}, {code: "SV", name: "El Salvador"}, {code: "GQ", name: "Equatorial Guinea"},
+            {code: "ER", name: "Eritrea"}, {code: "EE", name: "Estonia"}, {code: "ET", name: "Ethiopia"},
+            {code: "FJ", name: "Fiji"}, {code: "FI", name: "Finland"}, {code: "FR", name: "France"},
+            {code: "GA", name: "Gabon"}, {code: "GM", name: "Gambia"}, {code: "GE", name: "Georgia"},
+            {code: "DE", name: "Germany"}, {code: "GH", name: "Ghana"}, {code: "GR", name: "Greece"},
+            {code: "GD", name: "Grenada"}, {code: "GT", name: "Guatemala"}, {code: "GN", name: "Guinea"},
+            {code: "GW", name: "Guinea-Bissau"}, {code: "GY", name: "Guyana"}, {code: "HT", name: "Haiti"},
+            {code: "HN", name: "Honduras"}, {code: "HK", name: "Hong Kong"}, {code: "HU", name: "Hungary"},
+            {code: "IS", name: "Iceland"}, {code: "IN", name: "India"}, {code: "ID", name: "Indonesia"},
+            {code: "IR", name: "Iran"}, {code: "IQ", name: "Iraq"}, {code: "IE", name: "Ireland"},
+            {code: "IL", name: "Israel"}, {code: "IT", name: "Italy"}, {code: "JM", name: "Jamaica"},
+            {code: "JP", name: "Japan"}, {code: "JO", name: "Jordan"}, {code: "KZ", name: "Kazakhstan"},
+            {code: "KE", name: "Kenya"}, {code: "KI", name: "Kiribati"}, {code: "KP", name: "North Korea"},
+            {code: "KR", name: "South Korea"}, {code: "KW", name: "Kuwait"}, {code: "KG", name: "Kyrgyzstan"},
+            {code: "LA", name: "Laos"}, {code: "LV", name: "Latvia"}, {code: "LB", name: "Lebanon"},
+            {code: "LS", name: "Lesotho"}, {code: "LR", name: "Liberia"}, {code: "LY", name: "Libya"},
+            {code: "LI", name: "Liechtenstein"}, {code: "LT", name: "Lithuania"}, {code: "LU", name: "Luxembourg"},
+            {code: "MO", name: "Macau"}, {code: "MK", name: "Macedonia"}, {code: "MG", name: "Madagascar"},
+            {code: "MW", name: "Malawi"}, {code: "MY", name: "Malaysia"}, {code: "MV", name: "Maldives"},
+            {code: "ML", name: "Mali"}, {code: "MT", name: "Malta"}, {code: "MH", name: "Marshall Islands"},
+            {code: "MR", name: "Mauritania"}, {code: "MU", name: "Mauritius"}, {code: "MX", name: "Mexico"},
+            {code: "FM", name: "Micronesia"}, {code: "MD", name: "Moldova"}, {code: "MC", name: "Monaco"},
+            {code: "MN", name: "Mongolia"}, {code: "ME", name: "Montenegro"}, {code: "MA", name: "Morocco"},
+            {code: "MZ", name: "Mozambique"}, {code: "MM", name: "Myanmar"}, {code: "NA", name: "Namibia"},
+            {code: "NR", name: "Nauru"}, {code: "NP", name: "Nepal"}, {code: "NL", name: "Netherlands"},
+            {code: "NZ", name: "New Zealand"}, {code: "NI", name: "Nicaragua"}, {code: "NE", name: "Niger"},
+            {code: "NG", name: "Nigeria"}, {code: "NO", name: "Norway"}, {code: "OM", name: "Oman"},
+            {code: "PK", name: "Pakistan"}, {code: "PW", name: "Palau"}, {code: "PS", name: "Palestine"},
+            {code: "PA", name: "Panama"}, {code: "PG", name: "Papua New Guinea"}, {code: "PY", name: "Paraguay"},
+            {code: "PE", name: "Peru"}, {code: "PH", name: "Philippines"}, {code: "PL", name: "Poland"},
+            {code: "PT", name: "Portugal"}, {code: "PR", name: "Puerto Rico"}, {code: "QA", name: "Qatar"},
+            {code: "RO", name: "Romania"}, {code: "RU", name: "Russia"}, {code: "RW", name: "Rwanda"},
+            {code: "KN", name: "Saint Kitts and Nevis"}, {code: "LC", name: "Saint Lucia"}, {code: "VC", name: "Saint Vincent"},
+            {code: "WS", name: "Samoa"}, {code: "SM", name: "San Marino"}, {code: "ST", name: "Sao Tome and Principe"},
+            {code: "SA", name: "Saudi Arabia"}, {code: "SN", name: "Senegal"}, {code: "RS", name: "Serbia"},
+            {code: "SC", name: "Seychelles"}, {code: "SL", name: "Sierra Leone"}, {code: "SG", name: "Singapore"},
+            {code: "SK", name: "Slovakia"}, {code: "SI", name: "Slovenia"}, {code: "SB", name: "Solomon Islands"},
+            {code: "SO", name: "Somalia"}, {code: "ZA", name: "South Africa"}, {code: "SS", name: "South Sudan"},
+            {code: "ES", name: "Spain"}, {code: "LK", name: "Sri Lanka"}, {code: "SD", name: "Sudan"},
+            {code: "SR", name: "Suriname"}, {code: "SZ", name: "Swaziland"}, {code: "SE", name: "Sweden"},
+            {code: "CH", name: "Switzerland"}, {code: "SY", name: "Syria"}, {code: "TW", name: "Taiwan"},
+            {code: "TJ", name: "Tajikistan"}, {code: "TZ", name: "Tanzania"}, {code: "TH", name: "Thailand"},
+            {code: "TL", name: "Timor-Leste"}, {code: "TG", name: "Togo"}, {code: "TO", name: "Tonga"},
+            {code: "TT", name: "Trinidad and Tobago"}, {code: "TN", name: "Tunisia"}, {code: "TR", name: "Turkey"},
+            {code: "TM", name: "Turkmenistan"}, {code: "TV", name: "Tuvalu"}, {code: "UG", name: "Uganda"},
+            {code: "UA", name: "Ukraine"}, {code: "AE", name: "United Arab Emirates"}, {code: "GB", name: "United Kingdom"},
+            {code: "US", name: "United States"}, {code: "UY", name: "Uruguay"}, {code: "UZ", name: "Uzbekistan"},
+            {code: "VU", name: "Vanuatu"}, {code: "VA", name: "Vatican City"}, {code: "VE", name: "Venezuela"},
+            {code: "VN", name: "Vietnam"}, {code: "YE", name: "Yemen"}, {code: "ZM", name: "Zambia"},
+            {code: "ZW", name: "Zimbabwe"}
+        ];
+
+            // Populate countries dropdown
+            const countrySelect = document.getElementById('country');
+            const oldCountry = '';
+            
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.code;
+                option.textContent = country.name;
+                if (country.code === oldCountry) {
+                    option.selected = true;
+                }
+                countrySelect.appendChild(option);
+            });
+        });
+    </script>
+            </div>
+        </main>
+
+        <!-- Enhanced Footer -->
+        <footer class="bg-black dark:bg-blue-800 text-white dark:text-blue-100 py-6 transition-colors duration-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="mb-3 md:mb-0">
+                        <p class="text-xs text-gray-400 dark:text-blue-200">&copy; 2026 StockPrime. All rights reserved.</p>
+                    </div>
+                    <div class="flex space-x-6">
+                        <a href="privacy.html" class="text-xs text-gray-400 dark:text-blue-200 hover:text-white transition-colors duration-200">Privacy Policy</a>
+                        <a href="terms.html" class="text-xs text-gray-400 dark:text-blue-200 hover:text-white transition-colors duration-200">Terms of Service</a>
+                        <a href="contact.html" class="text-xs text-gray-400 dark:text-blue-200 hover:text-white transition-colors duration-200">Contact</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // Initialize Lucide icons when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+        
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            
+            // Reinitialize Lucide icons
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }, 100);
+        }
+    </script>
+<script src="registration.js?v=20260714a"></script>
+</body>
+
+</html>

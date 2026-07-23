@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<!-- Mirrored from tesla.developerplug.com/contact by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 30 Jun 2026 11:13:52 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="H0YLeIdQ9yp26PQBGgraeBBB0j0zKll1IHYpgim2">
+        <meta property="og:site_name" content="index.html" />
+        <meta property="og:url" content="index.html" />
+        <meta name="Developer" content="StockPrime" />
+        <title>StockPrime</title>
+
+        <!-- Favicon -->
+                    <link rel="icon" type="image/x-icon" href="storage/settings/nD0jqatt0igD7oF7VC4CdsckD2tbSAV47lXUHebb.png">
+        
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.bunny.net/">
+        <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700&amp;display=swap" rel="stylesheet" />
+
+        <!-- Lucide Icons -->
+        <script src="../unpkg.com/lucide%401.22.0/dist/umd/lucide.js"></script>
+
+        <!-- Scripts -->
+        <link rel="preload" as="style" href="build/assets/app-BUT93izI.css" /><link rel="modulepreload" href="build/assets/app-BP_vKhKL.js" /><link rel="stylesheet" href="build/assets/app-BUT93izI.css" /><link rel="stylesheet" href="support.css" /><script type="module" src="build/assets/app-BP_vKhKL.js"></script>        
+        <script>
+            // Initialize theme based on system preference
+            function initTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                
+                if (savedTheme) {
+                    // Use saved preference
+                    if (savedTheme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } else {
+                    // Use system preference
+                    if (prefersDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                }
+            }
+            initTheme();
+            
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                }
+            });
+        </script>
+    </head>
+   <body class="font-sans antialiased bg-white text-black">
+    <!-- Top Navigation (Dashboard-style) -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-blue-600 border-b border-blue-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center">
+                                                    <img src="storage/settings/hhb7Yj6zdj7QzEXWiKRVvkjJznru8eGnB5wKm2Ue.svg" alt="StockPrime" class="h-6 w-auto filter brightness-0 invert">
+                                            </a>
+                </div>
+
+                <!-- Primary Nav -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="cars.html" class="text-sm font-medium text-white hover:text-gray-200">Inventory</a>
+                    <a href="login.html" class="text-sm font-medium text-white hover:text-gray-200">Invest</a>
+                    <a href="login.html" class="text-sm font-medium text-white hover:text-gray-200">Stocks</a>
+                    <a href="login.html" class="text-sm font-medium text-white hover:text-gray-200">Portfolio</a>
+                </div>
+
+                <!-- Right Side -->
+                <div class="flex items-center space-x-2">
+                                            <a href="login.html" class="text-sm font-medium text-white hover:text-gray-200 px-3 py-2">Account</a>
+                    
+                    <!-- Mobile menu button -->
+                    <button type="button" class="md:hidden p-2 text-white hover:text-gray-200 rounded-md hover:bg-blue-700" id="mobile-menu-button">
+                        <span class="sr-only">Open menu</span>
+                        <i data-lucide="menu" class="w-5 h-5" id="menu-icon"></i>
+                        <i data-lucide="x" class="w-5 h-5 hidden" id="close-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-blue-600 border-t border-blue-700" id="mobile-menu">
+            <div class="px-4 pt-2 pb-4 space-y-1">
+                <a href="cars.html" class="block px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 rounded">Inventory</a>
+                <a href="login.html" class="block px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 rounded">Invest</a>
+                <a href="login.html" class="block px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 rounded">Stocks</a>
+                <a href="login.html" class="block px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 rounded">Portfolio</a>
+                                    <div class="border-t border-blue-700 mt-2 pt-2">
+                        <a href="login.html" class="block px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 rounded">Account</a>
+                    </div>
+                            </div>
+        </div>
+    </nav>
+        <!-- Flash Messages (Dashboard-style) -->
+        <div class="pt-16">
+                                                        </div>
+
+        <!-- Main Content -->
+        <main>
+            <div class="bg-white dark:bg-blue-900">
+  <!-- Hero Section -->
+  <header class="relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 text-white">
+    <svg class="absolute inset-0 opacity-[0.06] z-0 pointer-events-none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+    </svg>
+
+    <div class="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
+      <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/90"></div>
+    </div>
+
+    <div class="relative z-10">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <div class="text-center">
+          <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">
+            Get in Touch
+          </h1>
+          <p class="mt-4 max-w-2xl mx-auto text-base text-blue-100 dark:text-blue-200 sm:text-lg">
+            Have questions about our platform? We're here to help. Reach out to our team for support, partnerships, or general inquiries.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute bottom-0 left-0 right-0 translate-y-[1px]" aria-hidden="true">
+      <svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#0b0b0b" fill-opacity="1" d="M0,64L48,69.3C96,75,192,85,288,85.3C384,85,480,75,576,53.3C672,32,768,0,864,0C960,0,1056,32,1152,53.3C1248,75,1344,85,1392,90.7L1440,96L1440,160L1392,160C1344,160,1248,160,1152,160C1050,160,960,160,864,160C768,160,672,160,576,160C480,160,384,160,288,160C192,160,96,160,48,160L0,160Z"></path>
+      </svg>
+    </div>
+  </header>
+
+  <!-- Contact Form Section -->
+  <section class="bg-[#0b0b0b] dark:bg-blue-900 text-white py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <!-- Contact Information -->
+        <div>
+          <h2 class="text-3xl font-semibold mb-6">Contact Information</h2>
+          <p class="text-blue-100 dark:text-blue-200 mb-8">
+            Our team is available to assist you with any questions about our platform, services, or technical support.
+          </p>
+          
+          <div class="space-y-6">
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-white/10 dark:bg-blue-700 rounded-full flex items-center justify-center">
+                  <i data-lucide="mail" class="w-5 h-5 text-white"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-white">Email</h3>
+                <p class="text-blue-100 dark:text-blue-200"><a href="cdn-cgi/l/email-protection.html" class="__cf_email__" data-cfemail="d7a4a2a7a7b8a5a397b3b2a1b2bbb8a7b2a5a7bba2b0f9b4b8ba">[email&#160;protected]</a></p>
+                <p class="text-sm text-gray-400 dark:text-blue-300 mt-1">We typically respond within 24 hours</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-white/10 dark:bg-blue-700 rounded-full flex items-center justify-center">
+                  <i data-lucide="phone" class="w-5 h-5 text-white"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-white">Phone</h3>
+                <p class="text-blue-100 dark:text-blue-200">+234 8114313795</p>
+                <p class="text-sm text-gray-400 dark:text-blue-300 mt-1">Monday - Friday, 9AM - 6PM EST</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-white/10 dark:bg-blue-700 rounded-full flex items-center justify-center">
+                  <i data-lucide="map-pin" class="w-5 h-5 text-white"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-white">Address</h3>
+                <p class="text-blue-100 dark:text-blue-200">123 Innovation Drive<br>Tech City, TC 12345</p>
+                <p class="text-sm text-gray-400 dark:text-blue-300 mt-1">By appointment only</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-8">
+            <h3 class="text-lg font-medium text-white mb-4">Follow Us</h3>
+            <div class="flex space-x-4">
+              <a href="#" class="w-10 h-10 bg-white/10 dark:bg-blue-700 rounded-full flex items-center justify-center hover:bg-white/20 dark:hover:bg-blue-600 transition-colors">
+                <i data-lucide="twitter" class="w-5 h-5 text-white"></i>
+              </a>
+              <a href="#" class="w-10 h-10 bg-white/10 dark:bg-blue-700 rounded-full flex items-center justify-center hover:bg-white/20 dark:hover:bg-blue-600 transition-colors">
+                <i data-lucide="linkedin" class="w-5 h-5 text-white"></i>
+              </a>
+              <a href="#" class="w-10 h-10 bg-white/10 dark:bg-blue-700 rounded-full flex items-center justify-center hover:bg-white/20 dark:hover:bg-blue-600 transition-colors">
+                <i data-lucide="facebook" class="w-5 h-5 text-white"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contact Form -->
+        <div class="bg-white/5 dark:bg-blue-700 rounded-2xl p-8 border border-white/10 dark:border-blue-600">
+          <h3 class="text-2xl font-semibold text-white mb-6">Send us a Message</h3>
+          
+          <form action="#" method="POST" class="space-y-6">
+            <input type="hidden" name="_token" value="H0YLeIdQ9yp26PQBGgraeBBB0j0zKll1IHYpgim2" autocomplete="off">            
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label for="first_name" class="block text-sm font-medium text-blue-100 dark:text-blue-200 mb-2">First Name</label>
+                <input type="text" id="first_name" name="first_name" value="" required class="w-full px-4 py-3 bg-white/10 dark:bg-blue-600 border border-white/20 dark:border-blue-600 rounded-lg text-white placeholder-gray-400 dark:placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent">
+              </div>
+              <div>
+                <label for="last_name" class="block text-sm font-medium text-blue-100 dark:text-blue-200 mb-2">Last Name</label>
+                <input type="text" id="last_name" name="last_name" value="" required class="w-full px-4 py-3 bg-white/10 dark:bg-blue-600 border border-white/20 dark:border-blue-600 rounded-lg text-white placeholder-gray-400 dark:placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent">
+              </div>
+            </div>
+            
+            <div>
+              <label for="email" class="block text-sm font-medium text-blue-100 dark:text-blue-200 mb-2">Email</label>
+              <input type="email" id="email" name="email" value="" required class="w-full px-4 py-3 bg-white/10 dark:bg-blue-600 border border-white/20 dark:border-blue-600 rounded-lg text-white placeholder-gray-400 dark:placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent">
+            </div>
+            
+            <div>
+              <label for="subject" class="block text-sm font-medium text-blue-100 dark:text-blue-200 mb-2">Subject</label>
+              <select id="subject" name="subject" required class="w-full px-4 py-3 bg-white/10 dark:bg-blue-600 border border-white/20 dark:border-blue-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent">
+                <option value="" class="text-gray-900">Select a topic</option>
+                <option value="general" class="text-gray-900" >General Inquiry</option>
+                <option value="support" class="text-gray-900" >Technical Support</option>
+                <option value="billing" class="text-gray-900" >Billing & Payments</option>
+                <option value="partnership" class="text-gray-900" >Partnership</option>
+                <option value="press" class="text-gray-900" >Press & Media</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="message" class="block text-sm font-medium text-blue-100 dark:text-blue-200 mb-2">Message</label>
+              <textarea id="message" name="message" rows="6" required class="w-full px-4 py-3 bg-white/10 dark:bg-blue-600 border border-white/20 dark:border-blue-600 rounded-lg text-white placeholder-gray-400 dark:placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent"></textarea>
+            </div>
+            
+            <div>
+              <button type="submit" class="w-full bg-white text-black dark:bg-white dark:text-blue-900 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-blue-50 transition-colors duration-200">
+                Send Message
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="bg-white dark:bg-blue-900 py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-semibold text-black dark:text-white mb-4">Frequently Asked Questions</h2>
+        <p class="text-gray-600 dark:text-blue-100 max-w-2xl mx-auto">
+          Find quick answers to common questions about our platform and services.
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg font-semibold text-black dark:text-white mb-2">How do I get started with investing?</h3>
+            <p class="text-gray-600 dark:text-blue-100">Create an account, complete KYC verification, fund your wallet, and start investing in our automated plans or individual stocks.</p>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-black dark:text-white mb-2">What payment methods do you accept?</h3>
+            <p class="text-gray-600 dark:text-blue-100">We accept major cryptocurrencies including Bitcoin, Ethereum, and USDC for wallet funding and purchases.</p>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-black dark:text-white mb-2">Is my money safe?</h3>
+            <p class="text-gray-600 dark:text-blue-100">Yes, we use enterprise-grade security measures and regulatory compliance to protect your assets and personal information.</p>
+          </div>
+        </div>
+        
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg font-semibold text-black dark:text-white mb-2">How do I purchase a Tesla vehicle?</h3>
+            <p class="text-gray-600 dark:text-blue-100">Browse our inventory, select your preferred vehicle, and complete the purchase process through our secure checkout system.</p>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-black dark:text-white mb-2">What are the trading fees?</h3>
+            <p class="text-gray-600 dark:text-blue-100">We offer competitive trading fees starting at 0.1% per trade, with volume discounts available for active traders.</p>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-black dark:text-white mb-2">How can I contact support?</h3>
+            <p class="text-gray-600 dark:text-blue-100">You can reach our support team via email, phone, or through the support portal in your account dashboard.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-black dark:bg-blue-800 text-white dark:text-blue-100 mt-12 transition-colors duration-200">
+            <div class="max-w-7xl mx-auto px-6 sm:px-10 py-12">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-10 text-sm">
+                    <div class="col-span-2 md:col-span-1">
+                                                    <img src="storage/settings/hhb7Yj6zdj7QzEXWiKRVvkjJznru8eGnB5wKm2Ue.svg" alt="StockPrime" class="h-4 w-auto filter brightness-0 invert mb-6">
+                                                <p class="text-gray-400 dark:text-blue-200 mt-3">© 2026 StockPrime</p>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-base mb-4">Company</h4>
+                        <ul class="space-y-3 text-gray-400 dark:text-blue-200">
+                            <li><a href="about.html" class="hover:text-white transition-colors duration-200">About</a></li>
+                            <li><a href="contact.html" class="hover:text-white transition-colors duration-200">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-base mb-4">Support</h4>
+                        <ul class="space-y-3 text-gray-400 dark:text-blue-200">
+                            <li><a href="help-center.html" class="hover:text-white transition-colors duration-200">Help Center</a></li>
+                            <li><a href="terms.html" class="hover:text-white transition-colors duration-200">Terms</a></li>  
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-base mb-4">Legal</h4>
+                        <ul class="space-y-4 text-gray-400 dark:text-blue-200">
+                            <li><a href="privacy.html" class="hover:text-white transition-colors duration-200">Privacy & Legal</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+            // Initialize Lucide icons
+            lucide.createIcons();
+
+            // Mobile menu toggle
+            document.addEventListener('DOMContentLoaded', function() {
+                const mobileMenuButton = document.getElementById('mobile-menu-button');
+                const mobileMenu = document.getElementById('mobile-menu');
+                const menuIcon = document.getElementById('menu-icon');
+                const closeIcon = document.getElementById('close-icon');
+
+                if (mobileMenuButton && mobileMenu) {
+                    mobileMenuButton.addEventListener('click', function() {
+                        const isOpen = !mobileMenu.classList.contains('hidden');
+                        if (isOpen) {
+                            mobileMenu.classList.add('hidden');
+                            menuIcon.classList.remove('hidden');
+                            closeIcon.classList.add('hidden');
+                        } else {
+                            mobileMenu.classList.remove('hidden');
+                            menuIcon.classList.add('hidden');
+                            closeIcon.classList.remove('hidden');
+                        }
+                    });
+                }
+            });
+        </script>
+
+            <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"f3a59a655c3a49bf93aa9732fa9887c2","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script src="support.js"></script>
+</body>
+    
+<!-- Mirrored from tesla.developerplug.com/contact by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 30 Jun 2026 11:13:55 GMT -->
+</html>

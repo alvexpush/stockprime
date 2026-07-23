@@ -1,0 +1,32 @@
+.available{background:#dcfce7;color:#08752e}
+.vehicle-order{color:inherit}
+.dynamic-stock-orders{margin-top:24px}
+.stock-order-list{display:grid}
+.stock-order-row{padding:14px 4px;display:flex;justify-content:space-between;gap:16px;border-top:1px solid var(--line)}
+.stock-order-row>div:last-child{text-align:right}
+.stock-order-row span{margin-top:4px;display:block;color:var(--muted);font-size:11px}
+.stock-order-row .gain{color:#119447}
+.empty-dynamic{padding:30px;text-align:center;color:var(--muted)}
+.main>.section-shell{width:min(1220px,calc(100% - 48px));margin:42px auto}
+.main>.experience{min-height:390px;display:grid;grid-template-columns:40% 60%;overflow:hidden;border-radius:8px;background:#f4f4f4}
+.main>.experience .experience-copy{padding:48px 42px;display:flex;flex-direction:column;justify-content:center}
+.main>.experience .section-kicker{color:var(--red);font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase}
+.main>.experience h2{margin:8px 0 12px;font-size:34px;font-weight:500;line-height:1.06;letter-spacing:-.035em;color:var(--ink)}
+.main>.experience .experience-copy>p{color:var(--muted);font-size:13px;line-height:1.6}
+.main>.experience .experience-metrics{margin:22px 0 28px;display:flex;gap:48px}
+.main>.experience .experience-metrics strong{display:block;font-size:30px;font-weight:500;color:var(--ink)}
+.main>.experience .experience-metrics span{color:var(--muted);font-size:10px}
+.main>.experience .split-actions{display:flex;gap:10px}
+.main>.experience .dark-cta,.main>.experience .light-cta{min-width:190px;height:42px;padding:0 22px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:4px;font-size:12px;font-weight:600;transition:.2s}
+.main>.experience .dark-cta{background:var(--ink);color:#fff}
+.main>.experience .light-cta{background:#fff;color:var(--ink)}
+.main>.experience .dark-cta:hover{background:#30343b}
+.main>.experience .experience-media{position:relative;min-height:390px}
+.main>.experience .video-feature video{width:100%;height:100%;object-fit:cover}
+.main>.experience .media-label{position:absolute;left:20px;bottom:20px;padding:8px 12px;border-radius:4px;background:#0009;color:#fff;font-size:11px}
+.main>.experience .video-toggle{position:absolute;right:17px;bottom:17px;width:38px;height:38px;border:1px solid #ffffff70;border-radius:50%;background:#0008;color:#fff;font-size:0}
+.main>.experience .video-toggle::before{content:"";width:8px;height:12px;display:inline-block;border-left:3px solid currentColor;border-right:3px solid currentColor}
+.main>.experience .video-toggle.is-paused::before{width:0;height:0;border-left:10px solid currentColor;border-top:7px solid transparent;border-bottom:7px solid transparent;border-right:0}
+@media(max-width:560px){.stock-order-row{display:block}.stock-order-row>div:last-child{margin-top:8px;text-align:left}}
+@media(max-width:900px){.main>.experience{grid-template-columns:1fr}.main>.experience .experience-media{min-height:350px}}
+@media(max-width:620px){.main>.section-shell{width:calc(100% - 24px);margin:24px auto}.main>.experience .experience-copy{padding:33px 24px}.main>.experience h2{font-size:28px}.main>.experience .experience-metrics{gap:25px}.main>.experience .experience-metrics strong{font-size:24px}.main>.experience .experience-media{min-height:270px}.main>.experience .split-actions{flex-direction:column}.main>.experience .dark-cta,.main>.experience .light-cta{width:100%;min-width:0}}
