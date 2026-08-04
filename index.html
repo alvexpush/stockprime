@@ -1,8 +1,455 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="StockPrime investment plans, secure wallet funding, and transparent account tracking."><title>StockPrime — Invest with a Clear Plan</title><link rel="icon" href="images/stockprime-logo.png"><link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="home.css?v=20260723"></head><body>
-<header class="home-nav"><a class="home-logo" href="index.html"><img src="images/stockprime-logo.png" alt="StockPrime"></a><button class="home-menu" data-home-menu aria-label="Open menu">☰</button><nav data-home-nav><a href="#plans">Plans</a><a href="#how">How it works</a><a href="#security">Security</a><a href="login.html">Sign In</a><a class="nav-cta" href="register.html">Create Account</a></nav></header>
-<main><section class="home-hero"><div class="hero-copy"><span class="home-eyebrow">A CLEARER INVESTMENT EXPERIENCE</span><h1>Build your next investment with <em>StockPrime.</em></h1><p>Choose a fixed-term plan, fund your wallet with Bitcoin, and follow your principal, projected profit, and investment status from one simple dashboard.</p><div class="hero-actions"><a class="home-button gold" href="register.html">Start with $100</a><a class="home-button ghost" href="#plans">Explore plans</a></div><div class="hero-points"><span>✓ Email-confirmed accounts</span><span>✓ KYC verification</span><span>✓ Transparent plan limits</span></div></div><div class="hero-visual"><div class="visual-glow"></div><div class="portfolio-preview"><div class="preview-head"><span>Portfolio overview</span><b>StockPrime</b></div><div class="preview-total"><small>Current value</small><strong>$24,850.00</strong><span>Principal and projected profit tracked separately</span></div><div class="preview-grid"><div><small>Principal</small><b>$20,000</b></div><div><small>Projected Profit</small><b>$4,850</b></div><div><small>Running</small><b>2 Plans</b></div><div><small>KYC</small><b>Verified</b></div></div></div></div></section>
-<section class="trust-row"><span>FIXED PLAN TERMS</span><span>BITCOIN FUNDING</span><span>EMAIL LOGIN CODES</span><span>KYC ACCOUNT CHECKS</span></section>
-<section class="home-section plans-section" id="plans"><div class="section-heading"><span class="home-eyebrow">INVESTMENT PLANS</span><h2>Start at $100 and choose your term.</h2><p>Each plan displays its minimum, maximum, daily rate, fixed duration, and projected total return before you continue.</p></div><div class="home-plans"><article><span>BEGINNER</span><h3>Beginner Plan</h3><b>1 day</b><div><small>Daily Return</small><strong>5%</strong></div><div><small>Investment Range</small><strong>$100 – $6,999</strong></div><div><small>Projected Total Return</small><strong>5%</strong></div><a href="register.html">Get started →</a></article><article class="featured"><span>GOLD</span><h3>Gold Plan</h3><b>3 or 7 days</b><div><small>Daily Return</small><strong>6% – 7.5%</strong></div><div><small>Investment Range</small><strong>$7,000 – $29,999</strong></div><div><small>Projected Total Return</small><strong>18% – 52.5%</strong></div><a href="register.html">View Gold options →</a></article><article><span>PLATINUM</span><h3>Platinum Plan</h3><b>5 or 14 days</b><div><small>Daily Return</small><strong>7% – 10%</strong></div><div><small>Investment Range</small><strong>$25,000 – $99,999</strong></div><div><small>Projected Total Return</small><strong>35% – 140%</strong></div><a href="register.html">View Platinum →</a></article><article><span>DIAMOND</span><h3>Diamond Plan</h3><b>7 or 30 days</b><div><small>Daily Return</small><strong>8% – 12.5%</strong></div><div><small>Investment Range</small><strong>$100,000 – $500,000</strong></div><div><small>Projected Total Return</small><strong>56% – 375%</strong></div><a href="register.html">View Diamond →</a></article></div><p class="return-note">Displayed figures are plan projections for the complete term. Review the selected plan details and account requirements before confirming.</p></section>
-<section class="home-section process" id="how"><div class="section-heading"><span class="home-eyebrow">SIMPLE FROM THE START</span><h2>From registration to a running investment.</h2></div><div class="steps"><article><i>01</i><h3>Create and confirm</h3><p>Register your account and enter the confirmation code sent to your email.</p></article><article><i>02</i><h3>Complete KYC</h3><p>Submit your identity details and follow the verification status from your dashboard.</p></article><article><i>03</i><h3>Fund your wallet</h3><p>Use the guided Bitcoin deposit flow and submit your blockchain transaction reference.</p></article><article><i>04</i><h3>Select a plan</h3><p>Review the limits and return projection, confirm the amount, and monitor its progress.</p></article></div></section>
-<section class="home-section security" id="security"><div><span class="home-eyebrow">ACCOUNT SECURITY</span><h2>Important actions stay visible.</h2><p>StockPrime uses email confirmation during registration, a one-time email code for login, KYC status reminders, transaction history, and clear pending states for deposits and withdrawals.</p><a class="home-button gold" href="register.html">Create your account</a></div><div class="security-list"><div><i>✉</i><span><strong>Email confirmation</strong><small>Confirm registration and every new login.</small></span></div><div><i>✓</i><span><strong>KYC visibility</strong><small>Unverified and pending status stays visible.</small></span></div><div><i>⇄</i><span><strong>Transaction tracking</strong><small>Review deposits, withdrawals, and investments.</small></span></div></div></section>
-<section class="final-cta"><img src="images/stockprime-logo.png" alt="StockPrime"><h2>Ready to explore your first plan?</h2><p>Create your account, confirm your email, and begin from the StockPrime dashboard.</p><a class="home-button gold" href="register.html">Create Account</a></section></main><footer><div>© 2026 StockPrime</div><nav><a href="login.html">Sign In</a><a href="#plans">Investment Plans</a><a href="#security">Security</a></nav></footer><script>const button=document.querySelector('[data-home-menu]'),nav=document.querySelector('[data-home-nav]');button.onclick=()=>nav.classList.toggle('open');nav.querySelectorAll('a').forEach(a=>a.onclick=()=>nav.classList.remove('open'));</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Stock Prime Ledger is a next-generation trading platform for global financial markets.">
+  <title>Cryptocurrency and Forex Investment Platform | Stock Prime Ledger</title>
+  <link rel="icon" href="images/stockprime-logo.png">
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="home.css?v=2026080204">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Stock Prime Ledger home">
+      <img src="images/stockprime-logo.png" alt="Stock Prime Ledger">
+    </a>
+    <button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false" data-menu-button>
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav" data-menu>
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="about.html">About</a>
+      <a href="#services">Education</a>
+      <a href="help-center.html">FAQ</a>
+      <a href="contact.html">Contact Us</a>
+    </nav>
+    <div class="header-actions">
+      <a class="text-link" href="login.html">Login</a>
+      <a class="button button-small" href="register.html">Open account</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-media" aria-hidden="true"></div>
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="hero-light-sweep" aria-hidden="true"></div>
+      <div class="hero-market-pulse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hero-fire" aria-hidden="true"><i></i><i></i><b></b><b></b><b></b></div>
+      <div class="hero-content">
+        <p class="eyebrow light">Intelligent market access</p>
+        <h1>Get more from your trading</h1>
+        <p class="hero-intro"><strong>Stock Prime Ledger is a next-generation trading platform that combines artificial intelligence, algorithmic trading, and professional copy-trading technology to simplify investing in global financial markets. Our advanced FX-Bot continuously analyzes live market data and automatically mirrors the strategies of top-performing traders worldwide, enabling users to invest with confidence. With real-time trade execution, transparent portfolio monitoring, and intelligent risk management, Stock Prime Ledger delivers a secure and efficient path toward long-term financial growth.</strong></p>
+        <div class="hero-actions">
+          <a class="button" href="register.html">Create Account</a>
+          <a class="button button-secondary" href="login.html">Login</a>
+        </div>
+      </div>
+      <a class="hero-scroll" href="#credentials" aria-label="Explore the platform"><span></span></a>
+    </section>
+
+    <section class="credential-strip" id="credentials" aria-label="Platform credentials">
+      <div><b>01</b><span>committed to forex education</span></div>
+      <div><b>02</b><span>globally licensed and regulated</span></div>
+      <div><b>03</b><span>regular contests and promotions</span></div>
+      <div><b>04</b><span>protection of funds</span></div>
+      <div><b>05</b><span>unparalleled trading conditions</span></div>
+      <div><b>06</b><span>wide range of trading instruments</span></div>
+    </section>
+
+    <section class="market-intro section-dark">
+      <div class="section-inner split-intro">
+        <div>
+          <p class="eyebrow light">Global markets</p>
+          <h2>One platform. Multiple opportunities.</h2>
+        </div>
+        <p>We Trade CFDs on forex, Cryptocurrency, gold, indices, US shares and more With a broker trusted by thousands of traders worldwide. Trade with confidence and benefit from ultra-low spreads. Regulation across 6 jurisdictions. Multi-lingual live customer service. 24/7 cryptocurrency trading. Trading is especially risky in volatile markets.</p>
+      </div>
+      <div class="ticker" aria-label="Available markets">
+        <span>FOREX</span><span>CRYPTOCURRENCY</span><span>GOLD</span><span>INDICES</span><span>US SHARES</span><span>CFDs</span>
+      </div>
+    </section>
+
+    <section class="section services" id="services">
+      <div class="section-inner">
+        <div class="section-heading">
+          <p class="eyebrow">A complete approach</p>
+          <h2>Learn. Trade. Invest.</h2>
+        </div>
+        <div class="service-grid">
+          <article class="service-card">
+            <span class="card-number">01</span><h3>Learn</h3>
+            <ul><li>FREE Demo Account</li><li>Step-by step tutorials &amp; articles</li><li>Online webinars &amp; local seminars</li><li>Your own Account Manager</li></ul>
+            <a href="register.html">Create an account <span>&rarr;</span></a>
+          </article>
+          <article class="service-card featured">
+            <span class="card-number">02</span><h3>Trade</h3>
+            <ul><li>Tight spreads</li><li>Superfast trade execution</li><li>Hi-tech forex trading tools</li><li>Ultimate risk protection &amp; security</li></ul>
+            <a href="register.html">Create an account <span>&rarr;</span></a>
+          </article>
+          <article class="service-card">
+            <span class="card-number">03</span><h3>Invest</h3>
+            <ul><li>No need to be an experienced trader</li><li>Large number of strategies to follow</li><li>Profit whenever Strategy Managers earn</li><li>Full control of your Investment</li></ul>
+            <a href="register.html">Create an account <span>&rarr;</span></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section strategy-section" id="invest">
+      <div class="section-inner">
+        <div class="section-heading heading-row">
+          <div><p class="eyebrow">Stock Prime Ledger Invest</p><h2>Follow. Save. Grow.</h2></div>
+          <div><h3>Find the suitable traders to follow</h3><p>Choose experienced traders, follow them, and sit back while they do all the work. Your investment portfolio will grow with every successful trade, while you save your time and effort.</p></div>
+        </div>
+        <div class="strategy-grid">
+          <article class="strategy-card reveal"><img src="images/home/day-trading.jpg" alt="Day Trading"><div class="strategy-copy"><span>Day Trading</span><strong><span data-count="1000.86" data-decimals="2">0.00</span> %</strong><small>Return Rate</small><div class="market-motion" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="investors"><b><span data-count="3303">0</span></b><small>Investor</small></div><a href="register.html">Invest</a></article>
+          <article class="strategy-card reveal"><img src="images/home/swing-trading.jpg" alt="Swing Trading"><div class="strategy-copy"><span>Swing Trading</span><strong><span data-count="3000.46" data-decimals="2">0.00</span> %</strong><small>Return Rate</small><div class="market-motion" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="investors"><b><span data-count="1899">0</span>+</b><small>Investor</small></div><a href="register.html">Invest</a></article>
+          <article class="strategy-card reveal"><img src="images/home/position-trading.jpg" alt="Positional Trading"><div class="strategy-copy"><span>Positional Trading</span><strong><span data-count="2586" data-decimals="2">0.00</span>%</strong><small>Return Rate</small><div class="market-motion" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="investors"><b><span data-count="2680">0</span>+</b><small>Investor</small></div><a href="register.html">Invest</a></article>
+        </div>
+        <a class="button" href="register.html">Start following</a>
+      </div>
+    </section>
+
+    <section class="steps-section">
+      <div class="section-inner">
+        <div class="section-heading centered"><p class="eyebrow light">Three simple steps</p><h2>Getting Started</h2></div>
+        <div class="steps-grid">
+          <article><b>01</b><span></span><h3>Create An Account</h3></article>
+          <article><b>02</b><span></span><h3>Link Your Bank Account</h3></article>
+          <article><b>03</b><span></span><h3>Start Buying &amp; Selling</h3></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section utility-section">
+      <div class="section-inner utility-grid">
+        <div class="calculator-panel">
+          <p class="eyebrow light">Live calculation tool</p>
+          <h2>Bitcoin To Currency Calculator New Currency New Lifestyle!</h2>
+          <p>Bitcoin remains the most popular cryptocurrency in the world at the moment</p>
+          <div class="calculator" data-calculator>
+            <label>Bitcoin amount<input type="number" min="0" step="0.01" value="1" data-btc></label>
+            <label>USD per Bitcoin<input type="number" min="0" step="0.01" placeholder="Live rate" readonly data-rate></label>
+            <label>Estimated USD value<input type="text" value="$0.00" readonly data-usd></label>
+          </div>
+          <div class="calculator-meta"><small class="calculator-status" data-rate-status>Loading current BTC rate...</small><button type="button" data-refresh-rate>Refresh rate</button></div>
+        </div>
+        <div class="license-panel">
+          <div class="license-image"><img src="images/home/license.jpg" alt="License Image"></div>
+          <div><p class="eyebrow">Verification</p><h2>License</h2><button class="reveal-button" type="button" data-license-button>Click to Unveil Lincense Number</button><strong class="license-number" data-license-number>509649484937</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section partner-section">
+      <div class="section-inner">
+        <div class="section-heading centered"><p class="eyebrow">Connected across markets</p><h2>OUR PARTNERS</h2></div>
+        <div class="partner-row"><div><img src="images/home/1.png" alt="MetaTrader"></div><div><img src="images/home/2.png" alt="Blockchain"></div><div><img src="images/home/3.png" alt="Binance"></div><div><img src="images/home/4.png" alt="Luno"></div><div><img src="images/home/5.png" alt="Coinbase"></div><div><img src="images/home/6.png" alt="Mastercard"></div></div>
+      </div>
+    </section>
+
+    <section class="section testimonial-section">
+      <div class="section-inner">
+        <div class="section-heading heading-row"><div><p class="eyebrow light">Client stories</p><h2>HEAR FROM OUR CLIENTS</h2></div><p>Join others who have already chosen Stock Prime Ledger</p></div>
+        <div class="testimonial-grid">
+          <article class="is-highlighted"><p>"The program like enables me to execute the kind of one-on-one business Ive looking for. Its the kind of product that is taking our business to a different level."</p><div><img src="images/home/rinda-smith.jpg" alt="Rinda Smith"><span><b>RINDA SMITH</b><small>Real Estate Agent &middot; UK</small></span></div></article>
+          <article><p>"I've always liked good stylish programs, but never invested quite enough to have a good profit. Now, thanks to Stock Prime Ledger, we have a program we can be proud of."</p><div><img src="images/home/paul-wills.jpg" alt="Paul Wills"><span><b>PAUL WILLS</b><small>Pro Trader &middot; USA</small></span></div></article>
+          <article><p>"Easy, Fast And reliable. got my profits immediately after trading. Stock Prime Ledger is Awesome"</p><div><img src="images/home/john-joseph.jpg" alt="John Joseph"><span><b>JOHN JOSEPH</b><small>Model &middot; SOUTH AFRICA</small></span></div></article>
+          <article><p>"Thaks for the opportunity Stock Prime Ledger.it was really a life changing platform with a little stress free... And lastly,thanks janalle for assisting me till the end of my trade."</p><div><span class="testimonial-avatar">MJ</span><span><b>MICHAEL JACKSON</b><small>LAWYER &middot; UNITED STATES ALABAMA</small></span></div></article>
+          <article><p>"Thanks Stock Prime Ledger mining platform for the help and I love the lastest s13 antminer you use to trade for me.. It's advanced.. Love u."</p><div><span class="testimonial-avatar">SC</span><span><b>SHEREN CARABALLO</b><small>ACCOUNTANT &middot; CALIFORNIA</small></span></div></article>
+          <article><p>"Thanks Stock Prime Ledger for the help.. I bought a house and a car.."</p><div><span class="testimonial-avatar">RV</span><span><b>REM VENTURE</b><small>BANKER &middot; UK, LONDON</small></span></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing-cta">
+      <div><p class="eyebrow light">Begin today</p><h2>Your access to the global financial markets</h2></div>
+      <a class="button button-light" href="register.html">Create Account</a>
+    </section>
+  </main>
+
+  <aside class="activity-toast" aria-live="polite" aria-atomic="true" data-activity-toast>
+    <span class="activity-icon" aria-hidden="true">SP</span>
+    <div><strong data-activity-message>Elijah deposited $2,000</strong><span>just now</span></div>
+  </aside>
+
+  <div class="chat-widget" data-chat-widget>
+    <div class="chat-teaser" data-chat-teaser>Hi there. How can we help?</div>
+    <section class="chat-panel" aria-label="Support chat" data-chat-panel hidden>
+      <header><div><strong>StockPrime Support</strong><span><i></i> Support assistant online</span></div><button type="button" aria-label="Close support chat" title="Close" data-chat-close>&times;</button></header>
+      <div class="chat-messages" data-chat-messages><p><small>Support assistant</small>Hello. How can we help you today?</p></div>
+      <a class="chat-help-link" href="contact.html">Open Help Center</a>
+      <form data-chat-form><label class="sr-only" for="chat-message">Type your message</label><input id="chat-message" type="text" placeholder="Type your message" maxlength="300" required><button type="submit" aria-label="Send message" title="Send">&rarr;</button></form>
+    </section>
+    <button class="chat-launcher" type="button" aria-label="Open support chat" aria-expanded="false" data-chat-launcher><span>Chat</span><i class="chat-symbol" aria-hidden="true"></i><b aria-hidden="true"></b></button>
+  </div>
+
+  <div class="cta-modal" data-cta-modal hidden>
+    <div class="cta-dialog" role="dialog" aria-modal="true" aria-labelledby="cta-title">
+      <button class="cta-close" type="button" aria-label="Close invitation" title="Close" data-cta-close>&times;</button>
+      <p class="eyebrow">Your next move</p>
+      <h2 id="cta-title">Ready to put your plan in motion?</h2>
+      <p>Open your Stock Prime Ledger account and take your first step toward the global markets.</p>
+      <div><a class="button" href="register.html">Create Account</a><a class="button cta-login" href="login.html">Login</a></div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div class="footer-brand"><img src="images/stockprime-logo.png" alt="Stock Prime Ledger"><p>Licensed and regulated across the globe, we serve clients in over 150 countries worldwide. We guarantee the safety of your deposits with segregated funds protection.</p></div>
+      <div><h3>Company</h3><a href="index.html">Home</a><a href="about.html">About</a><a href="login.html">Login</a></div>
+      <div><h3>Features</h3><a href="#services">Education</a><a href="privacy.html">Privacy Policy</a><a href="register.html">Create an Account</a></div>
+      <div><h3>Help Center</h3><a href="help-center.html">FAQ</a><a href="contact.html">Support</a></div>
+      <div class="newsletter"><h3>Stay Connected</h3><p>Stay updated today by subscribing for our newsletters</p><form data-newsletter><label class="sr-only" for="newsletter-email">enter email address</label><input id="newsletter-email" type="email" placeholder="enter email address" required><button type="submit">subscribe</button></form><small data-newsletter-status></small></div>
+    </div>
+    <div class="footer-legal">
+      <p>&copy; 2013 - 2026 Stock Prime Ledger ltd &bull; HQ : Cayman Islands; Mah&eacute;, Seychelles<br>BRANCH : Georgia Town,KY....... San Francisco, CA</p>
+      <div><h3>Disclaimer</h3><p>At Stock Prime Ledger, we believe there is no better advertisement than satisfied clients. No wonder that majority of our new clients are affiliates from our existing clients. We are proud that our clients like to recommend our financial service to others. Because of this, we are pleased to offer one of the strongest online affiliate programs in the financial service industry, with a high commission rate, customized tools and reports, and timely commission payout</p><strong>We accept: Visa &middot; Bitcoin &middot; Ethereum</strong></div>
+    </div>
+  </footer>
+
+  <script>
+    const menuButton = document.querySelector('[data-menu-button]');
+    const menu = document.querySelector('[data-menu]');
+    menuButton.addEventListener('click', () => {
+      const open = menu.classList.toggle('open');
+      menuButton.setAttribute('aria-expanded', String(open));
+    });
+    menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+      menu.classList.remove('open');
+      menuButton.setAttribute('aria-expanded', 'false');
+    }));
+
+    const licenseButton = document.querySelector('[data-license-button]');
+    const licenseNumber = document.querySelector('[data-license-number]');
+    licenseButton.addEventListener('click', () => {
+      licenseNumber.classList.add('visible');
+      licenseButton.hidden = true;
+    });
+
+    const btcInput = document.querySelector('[data-btc]');
+    const rateInput = document.querySelector('[data-rate]');
+    const usdOutput = document.querySelector('[data-usd]');
+    const rateStatus = document.querySelector('[data-rate-status]');
+    const refreshRate = document.querySelector('[data-refresh-rate]');
+    let bitcoinRate = 0;
+    const renderConversion = () => {
+      usdOutput.value = bitcoinRate ? (Number(btcInput.value || 0) * bitcoinRate).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00';
+    };
+    btcInput.addEventListener('input', renderConversion);
+    rateInput.addEventListener('input', () => {
+      bitcoinRate = Number(rateInput.value || 0);
+      rateStatus.textContent = 'Using your entered BTC-USD rate';
+      renderConversion();
+    });
+    const loadBitcoinRate = async () => {
+      refreshRate.disabled = true;
+      rateStatus.textContent = 'Loading current BTC rate...';
+      try {
+        const response = await fetch('/api/btc-price');
+        if (!response.ok) throw new Error('Price unavailable');
+        const payload = await response.json();
+        bitcoinRate = Number(payload.amount);
+        rateInput.value = bitcoinRate.toFixed(2);
+        rateInput.readOnly = true;
+        rateStatus.textContent = `Current BTC-USD spot rate from ${payload.source}`;
+        renderConversion();
+      } catch {
+        try {
+          const response = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot');
+          if (!response.ok) throw new Error('Price unavailable');
+          const payload = await response.json();
+          bitcoinRate = Number(payload.data.amount);
+          rateInput.value = bitcoinRate.toFixed(2);
+          rateInput.readOnly = true;
+          rateStatus.textContent = 'Current BTC-USD spot rate from Coinbase';
+          renderConversion();
+        } catch {
+          rateInput.readOnly = false;
+          rateInput.placeholder = 'Enter BTC-USD rate';
+          rateStatus.textContent = 'Live rate unavailable. Enter a rate to calculate manually.';
+        }
+      } finally {
+        refreshRate.disabled = false;
+      }
+    };
+    refreshRate.addEventListener('click', loadBitcoinRate);
+    loadBitcoinRate();
+
+    const animateCount = (element) => {
+      const target = Number(element.dataset.count);
+      const decimals = Number(element.dataset.decimals || 0);
+      const start = performance.now();
+      const duration = 1300;
+      const update = (time) => {
+        const progress = Math.min(1, (time - start) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        element.textContent = (target * eased).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        if (progress < 1) requestAnimationFrame(update);
+      };
+      requestAnimationFrame(update);
+    };
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('visible');
+        entry.target.querySelectorAll('[data-count]').forEach(animateCount);
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: .25 });
+    document.querySelectorAll('.reveal').forEach((element) => revealObserver.observe(element));
+
+    const testimonials = [...document.querySelectorAll('.testimonial-grid article')];
+    let activeTestimonial = 0;
+    setInterval(() => {
+      testimonials[activeTestimonial].classList.remove('is-highlighted');
+      activeTestimonial = (activeTestimonial + 1) % testimonials.length;
+      testimonials[activeTestimonial].classList.add('is-highlighted');
+    }, 2400);
+
+    const activityMessages = [
+      'Elijah deposited $2,000',
+      'Samuel started a new plan',
+      'Jiggy completed account verification',
+      'Amara explored Day Trading',
+      'Daniel reviewed his portfolio',
+    ];
+    const activityToast = document.querySelector('[data-activity-toast]');
+    const activityMessage = document.querySelector('[data-activity-message]');
+    let activityIndex = 0;
+    const showActivity = () => {
+      activityMessage.textContent = activityMessages[activityIndex];
+      activityIndex = (activityIndex + 1) % activityMessages.length;
+      activityToast.classList.remove('show');
+      requestAnimationFrame(() => requestAnimationFrame(() => activityToast.classList.add('show')));
+      setTimeout(() => activityToast.classList.remove('show'), 1800);
+    };
+    let activityTimer;
+    new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        activityToast.classList.remove('show');
+        clearInterval(activityTimer);
+        activityTimer = null;
+      } else if (!activityTimer) {
+        showActivity();
+        activityTimer = setInterval(showActivity, 3000);
+      }
+    }, { threshold: .12 }).observe(document.querySelector('.hero'));
+
+    const chatLauncher = document.querySelector('[data-chat-launcher]');
+    const chatPanel = document.querySelector('[data-chat-panel]');
+    const chatClose = document.querySelector('[data-chat-close]');
+    const chatTeaser = document.querySelector('[data-chat-teaser]');
+    const chatForm = document.querySelector('[data-chat-form]');
+    const chatMessages = document.querySelector('[data-chat-messages]');
+    let supportSession;
+    try { supportSession = JSON.parse(localStorage.getItem('stockprimeSupportConversation') || 'null'); } catch { supportSession = null; }
+    const renderChatMessages = (messages) => {
+      chatMessages.replaceChildren();
+      if (!messages.length) {
+        const greeting = document.createElement('p');
+        const label = document.createElement('small');
+        label.textContent = 'Support assistant';
+        greeting.append(label, document.createTextNode('Hello. How can we help you today?'));
+        chatMessages.append(greeting);
+        return;
+      }
+      messages.forEach((message) => {
+        const item = document.createElement('p');
+        if (message.senderType === 'visitor') item.className = 'from-user';
+        const label = document.createElement('small');
+        label.textContent = message.senderType === 'visitor' ? 'You' : message.senderName;
+        item.append(label, document.createTextNode(message.message));
+        chatMessages.append(item);
+      });
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+    const syncSupportMessages = async () => {
+      if (!supportSession) return;
+      try {
+        const response = await fetch(`/api/support/conversations/${encodeURIComponent(supportSession.id)}/messages`, { headers: { 'X-Support-Token': supportSession.token } });
+        if (response.status === 404) {
+          supportSession = null;
+          localStorage.removeItem('stockprimeSupportConversation');
+          renderChatMessages([]);
+          return;
+        }
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Messages could not be loaded.');
+        renderChatMessages(payload.messages || []);
+      } catch (error) {
+        document.querySelector('.chat-help-link').textContent = error.message;
+      }
+    };
+    const setChatOpen = (open) => {
+      chatPanel.hidden = !open;
+      chatLauncher.setAttribute('aria-expanded', String(open));
+      chatTeaser.classList.remove('show');
+      if (open) {
+        requestAnimationFrame(() => chatPanel.classList.add('open'));
+        syncSupportMessages();
+        chatForm.querySelector('input').focus();
+      } else {
+        chatPanel.classList.remove('open');
+      }
+    };
+    chatLauncher.addEventListener('click', () => setChatOpen(chatPanel.hidden));
+    chatClose.addEventListener('click', () => setChatOpen(false));
+    chatForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const input = chatForm.querySelector('input'),button = chatForm.querySelector('button'),message = input.value.trim();
+      if (!message) return;
+      button.disabled = true;
+      try {
+        const url = supportSession ? `/api/support/conversations/${encodeURIComponent(supportSession.id)}/messages` : '/api/support/conversations';
+        const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(supportSession ? { 'X-Support-Token': supportSession.token } : {}) }, body: JSON.stringify({ message }) });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Message could not be sent.');
+        if (!supportSession) {
+          supportSession = payload.conversation;
+          localStorage.setItem('stockprimeSupportConversation', JSON.stringify(supportSession));
+        }
+        input.value = '';
+        document.querySelector('.chat-help-link').textContent = 'Message delivered. Replies appear here automatically.';
+        await syncSupportMessages();
+      } catch (error) {
+        document.querySelector('.chat-help-link').textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+    setInterval(() => { if (!chatPanel.hidden) syncSupportMessages(); }, 3000);
+    setTimeout(() => chatTeaser.classList.add('show'), 4200);
+    setTimeout(() => chatTeaser.classList.remove('show'), 10500);
+
+    const ctaModal = document.querySelector('[data-cta-modal]');
+    const ctaClose = document.querySelector('[data-cta-close]');
+    const closeCta = () => {
+      ctaModal.classList.remove('open');
+      setTimeout(() => { ctaModal.hidden = true; }, 220);
+      sessionStorage.setItem('stockprimeCtaDismissed', '1');
+    };
+    ctaClose.addEventListener('click', closeCta);
+    ctaModal.addEventListener('click', (event) => { if (event.target === ctaModal) closeCta(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !ctaModal.hidden) closeCta(); });
+    if (!sessionStorage.getItem('stockprimeCtaDismissed')) {
+      setTimeout(() => {
+        setChatOpen(false);
+        ctaModal.hidden = false;
+        requestAnimationFrame(() => ctaModal.classList.add('open'));
+        ctaClose.focus();
+      }, 14000);
+    }
+
+    const newsletter = document.querySelector('[data-newsletter]');
+    newsletter.addEventListener('submit', (event) => {
+      event.preventDefault();
+      document.querySelector('[data-newsletter-status]').textContent = 'Thank you for subscribing.';
+      newsletter.reset();
+    });
+  </script>
+</body>
+</html>

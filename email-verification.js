@@ -17,7 +17,7 @@
       if(!response.ok)throw new Error(data.error||"The code could not be confirmed.");
       localStorage.setItem("stockprimeSession",JSON.stringify({email:data.user.email,name:data.user.name,signedInAt:new Date().toISOString(),serverAuthenticated:true}));
       const existing=JSON.parse(localStorage.getItem("stockprimeProfile")||"null")||{};localStorage.setItem("stockprimeProfile",JSON.stringify({...existing,name:data.user.name,email:data.user.email,phone:data.user.phone,country:data.user.country,currency:data.user.currency}));
-      sessionStorage.removeItem("stockprimeVerification");show(data.message,"success");button.textContent="Confirmed";setTimeout(()=>location.replace("dashboard.html"),850);
+      const destination=pagePurpose==="login"&&/^[a-z0-9._?=&-]+$/i.test(state.next||"")?state.next:"dashboard.html";sessionStorage.removeItem("stockprimeVerification");show(data.message,"success");button.textContent="Confirmed";setTimeout(()=>location.replace(destination),850);
     }catch(error){show(error.message,"error");button.disabled=false;button.textContent=pagePurpose==="registration"?"Confirm Email":"Confirm and Sign In"}
   });
   let remaining=0,timer;

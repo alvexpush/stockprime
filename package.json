@@ -7,6 +7,9 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "db:check": "node scripts/check-db.js",
+    "email:authorize": "node scripts/authorize-zoho-email.js",
+    "email:check": "node scripts/check-zoho-email.js",
+    "test:email": "node scripts/check-transactional-email-flows.js",
     "test:e2e": "node scripts/e2e-flow.js"
   },
   "engines": {

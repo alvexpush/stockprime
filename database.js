@@ -60,6 +60,20 @@ db.exec(`
     created_at TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS email_deliveries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id TEXT NOT NULL UNIQUE,
+    recipient TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('pending','sent','failed','skipped')),
+    attempts INTEGER NOT NULL DEFAULT 0,
+    error_message TEXT,
+    created_at TEXT NOT NULL,
+    sent_at TEXT
+  );
+
   CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     public_id TEXT NOT NULL UNIQUE,
@@ -253,8 +267,31 @@ db.exec(`
     created_at TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS support_conversations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id TEXT NOT NULL UNIQUE,
+    visitor_token_hash TEXT NOT NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    visitor_name TEXT,
+    visitor_email TEXT,
+    status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','closed')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS support_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id TEXT NOT NULL UNIQUE,
+    conversation_id INTEGER NOT NULL REFERENCES support_conversations(id) ON DELETE CASCADE,
+    sender_type TEXT NOT NULL CHECK(sender_type IN ('visitor','admin')),
+    sender_name TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash);
   CREATE INDEX IF NOT EXISTS idx_email_verification_user ON email_verification_codes(user_id,purpose,created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_email_deliveries_created ON email_deliveries(created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_reset_tokens(token_hash);
   CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipient_user_id,created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user ON wallet_transactions(user_id, created_at DESC);
@@ -262,6 +299,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_stock_orders_user ON stock_orders(user_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_user_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_affiliate_withdrawals_user ON affiliate_withdrawals(user_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_support_conversations_updated ON support_conversations(updated_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_support_messages_conversation ON support_messages(conversation_id, id);
   CREATE UNIQUE INDEX IF NOT EXISTS idx_one_welcome_bonus_per_user ON wallet_transactions(user_id,reference) WHERE reference='Welcome Investment Bonus';
 `);
 

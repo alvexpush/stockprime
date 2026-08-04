@@ -14,11 +14,13 @@ const mime = {".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8
 const now = () => new Date().toISOString();
 const publicId = prefix => `${prefix}-${crypto.randomUUID()}`;
 const sha256 = value => crypto.createHash("sha256").update(value).digest("hex");
+const verificationCodeHash=value=>crypto.createHmac("sha256",process.env.OTP_SECRET||(process.env.NODE_ENV==="production"?"missing-production-otp-secret":"stockprime-local-development")).update(value).digest("hex");
 const cents = value => Math.round(Number(value) * 100);
 const loginAttempts = new Map();
 const adminSessions = new Map();
 const quoteCache = new Map();
 const newsCache = new Map();
+const btcPriceCache = { value:null, cachedAt:0 };
 const supportedStockSymbols = new Set(["AAPL","AMZN","GOOGL","JNJ","JPM","META","MSFT","NFLX","NVDA","TSLA"]);
 const yearMs = 365.25 * 24 * 60 * 60 * 1000;
 const verificationCodeMinutes = 10;
@@ -144,20 +146,60 @@ async function sendZohoEmail({to,subject,html},retry=true){
   if(!response.ok){const details=await response.text();throw new Error(`Zoho Mail send failed (${response.status})${details?`: ${details.slice(0,180)}`:""}`)}
   return true;
 }
+function configuredSecret(value){return Boolean(value)&&!/^(your_|generate_|change_|<)/i.test(String(value).trim())}
 async function sendTransactionalEmail(message){
   const provider=String(process.env.EMAIL_PROVIDER||"").toLowerCase();
-  if(provider==="zoho")return sendZohoEmail(message);
-  if(process.env.RESEND_API_KEY){const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.AUTH_FROM_EMAIL||process.env.RESET_FROM_EMAIL||"StockPrime <onboarding@resend.dev>",to:[message.to],subject:message.subject,html:message.html}),signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error("Email could not be sent.");return true}
-  if(process.env.NODE_ENV==="production")throw new Error("Email delivery is not configured.");return false;
+  const hasResend=configuredSecret(process.env.RESEND_API_KEY),activeProvider=provider==="zoho"?"zoho":hasResend?"resend":"development",deliveryId=publicId("EML"),timestamp=now();
+  db.prepare("INSERT INTO email_deliveries (public_id,recipient,subject,kind,provider,status,created_at) VALUES (?,?,?,?,?,'pending',?)").run(deliveryId,message.to,message.subject,message.kind||"transactional",activeProvider,timestamp);
+  try{
+    let delivered=false;
+    if(provider==="zoho")delivered=await sendZohoEmail(message);
+    else if(hasResend){const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.AUTH_FROM_EMAIL||process.env.RESET_FROM_EMAIL||"StockPrime <onboarding@resend.dev>",to:[message.to],subject:message.subject,html:message.html}),signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error("Email could not be sent.");delivered=true}
+    else if(process.env.NODE_ENV==="production")throw new Error("Email delivery is not configured.");
+    db.prepare("UPDATE email_deliveries SET status=?,attempts=1,sent_at=? WHERE public_id=?").run(delivered?"sent":"skipped",delivered?now():null,deliveryId);
+    return delivered;
+  }catch(error){
+    db.prepare("UPDATE email_deliveries SET status='failed',attempts=1,error_message=? WHERE public_id=?").run(String(error.message||error).slice(0,500),deliveryId);
+    throw error;
+  }
 }
+function emailDeliveryStatus(){
+  const provider=String(process.env.EMAIL_PROVIDER||"").trim().toLowerCase();
+  if(provider==="zoho"){
+    const required=["ZOHO_CLIENT_ID","ZOHO_CLIENT_SECRET","ZOHO_REFRESH_TOKEN","ZOHO_FROM_EMAIL",...(process.env.NODE_ENV==="production"?["OTP_SECRET"]:[])];
+    const missing=required.filter(key=>!configuredSecret(process.env[key]));
+    return {provider:"zoho",configured:missing.length===0,missing};
+  }
+  if(configuredSecret(process.env.RESEND_API_KEY))return {provider:"resend",configured:true,missing:[]};
+  return {provider:"development",configured:process.env.NODE_ENV!=="production",missing:process.env.NODE_ENV==="production"?["EMAIL_PROVIDER"]:[]};
+}
+function emailEscape(value){return String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]))}
+function moneyEmail(amountCents,currency="USD"){try{return new Intl.NumberFormat("en-US",{style:"currency",currency}).format(Number(amountCents||0)/100)}catch{return `${currency} ${(Number(amountCents||0)/100).toFixed(2)}`}}
+function emailTemplate({eyebrow="StockPrime",title,intro="",content="",actionUrl="",actionLabel="",note=""}){
+  const button=actionUrl&&actionLabel?`<p style="margin:28px 0"><a href="${emailEscape(actionUrl)}" style="display:inline-block;background:#0b7a3e;color:#fff;text-decoration:none;padding:13px 22px;border-radius:8px;font-weight:700">${emailEscape(actionLabel)}</a></p>`:"";
+  return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,sans-serif;color:#17211b"><div style="display:none;max-height:0;overflow:hidden">${emailEscape(intro||title)}</div><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f6f4;padding:28px 12px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fff;border:1px solid #dce7df;border-radius:14px;overflow:hidden"><tr><td style="background:#075c32;padding:24px 30px;color:#fff"><div style="font-size:18px;font-weight:800;letter-spacing:.08em">STOCKPRIME</div></td></tr><tr><td style="padding:32px 30px"><div style="color:#0b7a3e;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${emailEscape(eyebrow)}</div><h1 style="font-size:25px;line-height:1.25;margin:9px 0 14px;color:#102117">${emailEscape(title)}</h1>${intro?`<p style="font-size:16px;line-height:1.65;color:#435248">${emailEscape(intro)}</p>`:""}${content}${button}${note?`<p style="margin-top:26px;padding-top:20px;border-top:1px solid #e3ebe6;color:#6a766e;font-size:13px;line-height:1.55">${emailEscape(note)}</p>`:""}</td></tr><tr><td style="background:#f7faf8;padding:18px 30px;color:#748078;font-size:12px">This is an automated security and account message from StockPrime.</td></tr></table></td></tr></table></body></html>`;
+}
+function publicUrl(req,pathname){const configured=String(process.env.APP_URL||"").trim().replace(/\/$/,"");if(/^https?:\/\//i.test(configured))return `${configured}${pathname.startsWith("/")?pathname:`/${pathname}`}`;const protocol=String(req?.headers?.["x-forwarded-proto"]||"http").split(",")[0].trim(),host=req?.headers?.host;return host?`${protocol}://${host}${pathname.startsWith("/")?pathname:`/${pathname}`}`:pathname}
+async function safeTransactionalEmail(message){try{return await sendTransactionalEmail(message)}catch(error){console.error(`Email delivery failed (${message.kind||"transactional"}): ${error.message}`);return false}}
 async function sendPasswordReset(email,link){
-  const sent=await sendTransactionalEmail({to:email,subject:"Reset your StockPrime password",html:`<p>A password reset was requested for your account.</p><p><a href="${link}">Reset your password</a></p><p>This link expires in 30 minutes. If you did not request it, you can ignore this email.</p>`});
+  const sent=await sendTransactionalEmail({to:email,kind:"login_code_reset",subject:"Reset your StockPrime login code",html:emailTemplate({eyebrow:"Security",title:"Reset your login code",intro:"We received a request to replace the private six-digit login code for your account.",actionUrl:link,actionLabel:"Choose a new login code",note:"This link expires in 30 minutes and works only once. If you did not request this, you can safely ignore this email."})});
   if(!sent)console.log(`[password reset] ${email}: ${link}`);return sent;
 }
 async function sendVerificationCode(email,code,purpose){
   const action=purpose==="registration"?"confirm your StockPrime account":"complete your StockPrime sign in";
-  const sent=await sendTransactionalEmail({to:email,subject:purpose==="registration"?"Confirm your StockPrime account":"Your StockPrime sign-in code",html:`<div style="font-family:Arial,sans-serif;color:#172033"><h2>${purpose==="registration"?"Confirm your account":"Confirm your sign in"}</h2><p>Use this code to ${action}:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>This code expires in ${verificationCodeMinutes} minutes and can only be used once.</p><p>If you did not request this, you can ignore this email.</p></div>`});
+  const title=purpose==="registration"?"Confirm your account":"Confirm your sign in",content=`<p style="font-size:16px;line-height:1.65;color:#435248">Use this one-time code to ${action}:</p><div style="margin:24px 0;padding:18px;text-align:center;background:#eef8f2;border:1px solid #cce8d7;border-radius:10px;font-size:34px;font-weight:800;letter-spacing:9px;color:#075c32">${code}</div>`;
+  const sent=await sendTransactionalEmail({to:email,kind:`${purpose}_code`,subject:purpose==="registration"?"Confirm your StockPrime account":"Your StockPrime sign-in code",html:emailTemplate({eyebrow:"Verification",title,content,note:`This code expires in ${verificationCodeMinutes} minutes and can only be used once. Never share it with anyone.`})});
   if(!sent)console.log(`[${purpose} verification] ${email}: ${code}`);return sent;
+}
+async function sendWelcomeEmail(user,req){return safeTransactionalEmail({to:user.email,kind:"welcome",subject:"Welcome to StockPrime",html:emailTemplate({eyebrow:"Account ready",title:`Welcome, ${user.first_name||user.name||"Investor"}`,intro:"Your email address is confirmed and your StockPrime account is ready.",actionUrl:publicUrl(req,"/dashboard.html"),actionLabel:"Open your dashboard",note:"If you did not create this account, contact support immediately."})})}
+async function sendAccountNotificationEmail(user,{title,message,category="general"}){return safeTransactionalEmail({to:user.email,kind:`notification_${category}`,subject:title,html:emailTemplate({eyebrow:`${category} notification`,title,intro:message,note:"You can also view this notification in your StockPrime dashboard."})})}
+async function sendNotificationBatch(users,notification){const results=[];for(let index=0;index<users.length;index+=5){const batch=users.slice(index,index+5);results.push(...await Promise.all(batch.map(user=>sendAccountNotificationEmail(user,notification))))}return {sent:results.filter(Boolean).length,failed:results.filter(result=>!result).length}}
+async function sendWalletEventEmail(user,{type,status,amountCents,feeCents=0,currency="USD",method="",transactionId=""}){
+  const isWithdrawal=type==="withdrawal",label=isWithdrawal?"Withdrawal":"Deposit",statusLabel=String(status).replace(/^./,char=>char.toUpperCase()),rows=[["Amount",moneyEmail(amountCents,currency)],["Status",statusLabel],["Method",method],["Reference",transactionId]];if(isWithdrawal&&feeCents)rows.splice(1,0,["Fee",moneyEmail(feeCents,currency)]);
+  const content=`<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:22px 0;border-collapse:collapse">${rows.filter(row=>row[1]).map(([name,value])=>`<tr><td style="padding:10px;border-bottom:1px solid #e3ebe6;color:#6a766e">${emailEscape(name)}</td><td style="padding:10px;border-bottom:1px solid #e3ebe6;text-align:right;font-weight:700">${emailEscape(value)}</td></tr>`).join("")}</table>`;
+  const title=status==="pending"?`${label} request received`:`${label} ${status}`;
+  const intro=isWithdrawal&&status==="pending"?"A withdrawal has just been requested from your StockPrime account. If this was not you, contact support immediately.":`Your ${label.toLowerCase()} status has been updated.`;
+  return safeTransactionalEmail({to:user.email,kind:`${type}_${status}`,subject:`StockPrime ${label.toLowerCase()} ${status}`,html:emailTemplate({eyebrow:"Wallet activity",title,intro,content,note:"For your security, StockPrime will never ask for your login code by email."})});
 }
 async function marketNews(){
   const cached=newsCache.get("market");if(cached&&Date.now()-cached.cachedAt<10*60000)return cached.value;
@@ -194,20 +236,21 @@ function userPayload(user) {
 }
 function maskedEmail(email){const [name,domain]=String(email).split("@");return `${name.slice(0,2)}${"*".repeat(Math.max(1,name.length-2))}@${domain}`}
 async function issueVerificationCode(user,purpose,req,{force=false}={}){
+  if(process.env.NODE_ENV==="production"&&!emailDeliveryStatus().configured)throw Object.assign(new Error("Email verification security is not configured."),{status:503});
   const latest=db.prepare("SELECT created_at FROM email_verification_codes WHERE user_id=? AND purpose=? ORDER BY id DESC LIMIT 1").get(user.id,purpose);
   if(!force&&latest&&Date.now()-new Date(latest.created_at).getTime()<30000)throw Object.assign(new Error("Please wait 30 seconds before requesting another code."),{status:429});
   const code=String(crypto.randomInt(0,1000000)).padStart(6,"0"),timestamp=now(),expires=new Date(Date.now()+verificationCodeMinutes*60000).toISOString();
   db.prepare("UPDATE email_verification_codes SET used_at=? WHERE user_id=? AND purpose=? AND used_at IS NULL").run(timestamp,user.id,purpose);
-  db.prepare("INSERT INTO email_verification_codes (user_id,purpose,code_hash,expires_at,requested_ip,created_at) VALUES (?,?,?,?,?,?)").run(user.id,purpose,sha256(code),expires,requestIp(req),timestamp);
+  db.prepare("INSERT INTO email_verification_codes (user_id,purpose,code_hash,expires_at,requested_ip,created_at) VALUES (?,?,?,?,?,?)").run(user.id,purpose,verificationCodeHash(code),expires,requestIp(req),timestamp);
   try{await sendVerificationCode(user.email,code,purpose)}catch(error){console.error(error.message);throw Object.assign(new Error("We could not send the verification email. Please try again."),{status:502})}
-  const hasEmailProvider=String(process.env.EMAIL_PROVIDER||"").toLowerCase()==="zoho"||Boolean(process.env.RESEND_API_KEY);
+  const hasEmailProvider=emailDeliveryStatus().configured&&emailDeliveryStatus().provider!=="development";
   return {developmentCode:!hasEmailProvider&&process.env.NODE_ENV!=="production"?code:undefined,expiresInSeconds:verificationCodeMinutes*60};
 }
 function verifyEmailCode(user,purpose,code){
   const record=db.prepare("SELECT * FROM email_verification_codes WHERE user_id=? AND purpose=? AND used_at IS NULL ORDER BY id DESC LIMIT 1").get(user.id,purpose);
   if(!record||record.expires_at<=now())throw Object.assign(new Error("This verification code has expired. Request a new code."),{status:422});
   if(record.attempts>=5)throw Object.assign(new Error("Too many incorrect attempts. Request a new code."),{status:429});
-  if(!/^\d{6}$/.test(code)||record.code_hash!==sha256(code)){db.prepare("UPDATE email_verification_codes SET attempts=attempts+1 WHERE id=?").run(record.id);throw Object.assign(new Error("The verification code is incorrect."),{status:422})}
+  if(!/^\d{6}$/.test(code)||record.code_hash!==verificationCodeHash(code)){db.prepare("UPDATE email_verification_codes SET attempts=attempts+1 WHERE id=?").run(record.id);throw Object.assign(new Error("The verification code is incorrect."),{status:422})}
   db.prepare("UPDATE email_verification_codes SET used_at=? WHERE id=?").run(now(),record.id);
 }
 function audit(actorId, action, entityType, entityId, details, req) {
@@ -216,8 +259,50 @@ function audit(actorId, action, entityType, entityId, details, req) {
 }
 
 async function api(req, res, url) {
-  if(req.method==="GET"&&url.pathname==="/api/health")return json(res,200,{status:"ok",service:"stockprime",time:now()});
+  if(req.method==="GET"&&url.pathname==="/api/health"){const email=emailDeliveryStatus(),ready=process.env.NODE_ENV!=="production"||email.configured;return json(res,ready?200:503,{status:ready?"ok":"configuration_required",service:"stockprime",time:now(),email:{provider:email.provider,configured:email.configured}})}
+  if(req.method==="GET"&&url.pathname==="/api/btc-price"){
+    if(btcPriceCache.value&&Date.now()-btcPriceCache.cachedAt<30000)return json(res,200,btcPriceCache.value);
+    try{
+      const response=await fetch("https://api.coinbase.com/v2/prices/BTC-USD/spot",{headers:{"Accept":"application/json","User-Agent":"StockPrime/1.0"},signal:AbortSignal.timeout(8000)});
+      if(!response.ok)throw new Error(`Price provider returned ${response.status}.`);
+      const payload=await response.json(),amount=Number(payload?.data?.amount);
+      if(!Number.isFinite(amount)||amount<=0)throw new Error("The BTC-USD price is unavailable.");
+      btcPriceCache.value={amount,currency:"USD",source:"Coinbase",updatedAt:now()};btcPriceCache.cachedAt=Date.now();
+      return json(res,200,btcPriceCache.value);
+    }catch(error){console.error(`[btc price] ${error.message}`);throw Object.assign(new Error("The live BTC price is temporarily unavailable."),{status:502})}
+  }
   if (req.method !== "GET" && !sameOrigin(req)) return json(res, 403, { error:"Invalid request origin." });
+
+  if(req.method==="POST"&&url.pathname==="/api/support/conversations"){
+    const input=await body(req),message=String(input.message||"").trim(),name=String(input.name||"").trim().slice(0,80),email=String(input.email||"").trim().toLowerCase().slice(0,160),user=currentUser(req);
+    if(message.length<2||message.length>500)return json(res,422,{error:"Enter a message between 2 and 500 characters."});
+    if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return json(res,422,{error:"Enter a valid email address."});
+    const id=publicId("SUP"),token=crypto.randomBytes(32).toString("base64url"),timestamp=now(),senderName=user?.name||name||"Website visitor";
+    db.exec("BEGIN IMMEDIATE");
+    try{
+      const conversation=db.prepare("INSERT INTO support_conversations (public_id,visitor_token_hash,user_id,visitor_name,visitor_email,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id,sha256(token),user?.id||null,user?.name||name||null,user?.email||email||null,timestamp,timestamp);
+      db.prepare("INSERT INTO support_messages (public_id,conversation_id,sender_type,sender_name,message,created_at) VALUES (?,?,'visitor',?,?,?)").run(publicId("MSG"),conversation.lastInsertRowid,senderName,message,timestamp);
+      db.exec("COMMIT");
+    }catch(error){db.exec("ROLLBACK");throw error}
+    return json(res,201,{conversation:{id,token,status:"open"},messages:[{senderType:"visitor",senderName,message,createdAt:timestamp}]});
+  }
+  if(/^\/api\/support\/conversations\/[^/]+\/messages$/.test(url.pathname)){
+    const conversationId=decodeURIComponent(url.pathname.split("/")[4]),token=String(req.headers["x-support-token"]||""),conversation=token&&db.prepare("SELECT * FROM support_conversations WHERE public_id=? AND visitor_token_hash=?").get(conversationId,sha256(token));
+    if(!conversation)return json(res,404,{error:"Support conversation was not found."});
+    if(req.method==="GET"){
+      const messages=db.prepare("SELECT public_id AS id,sender_type AS senderType,sender_name AS senderName,message,created_at AS createdAt FROM support_messages WHERE conversation_id=? ORDER BY support_messages.id").all(conversation.id);
+      return json(res,200,{conversation:{id:conversation.public_id,status:conversation.status},messages});
+    }
+    if(req.method==="POST"){
+      if(conversation.status!=="open")return json(res,409,{error:"This support conversation is closed."});
+      const input=await body(req),message=String(input.message||"").trim();
+      if(message.length<2||message.length>500)return json(res,422,{error:"Enter a message between 2 and 500 characters."});
+      const recent=db.prepare("SELECT COUNT(*) count FROM support_messages WHERE conversation_id=? AND sender_type='visitor' AND created_at>?").get(conversation.id,new Date(Date.now()-60000).toISOString()).count;
+      if(recent>=8)return json(res,429,{error:"Please wait before sending another message."});
+      const timestamp=now(),senderName=conversation.visitor_name||"Website visitor";db.prepare("INSERT INTO support_messages (public_id,conversation_id,sender_type,sender_name,message,created_at) VALUES (?,?,'visitor',?,?,?)").run(publicId("MSG"),conversation.id,senderName,message,timestamp);db.prepare("UPDATE support_conversations SET updated_at=? WHERE id=?").run(timestamp,conversation.id);
+      return json(res,201,{message:{senderType:"visitor",senderName,message,createdAt:timestamp}});
+    }
+  }
 
   if(req.method==="GET"&&url.pathname==="/api/referrals/validate"){
     const code=String(url.searchParams.get("code")||"").trim().toUpperCase();
@@ -247,7 +332,7 @@ async function api(req, res, url) {
     db.exec("BEGIN IMMEDIATE");
     let result;
     try {
-      result=db.prepare("INSERT INTO users (public_id,name,email,password_hash,login_code_hash,country,currency,first_name,last_name,phone,referral_code,registration_ip,email_verified_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(id,name,email,passwordHashValue,loginCodeHash,country,currency,firstName,lastName,phone,code,ip,timestamp,timestamp,timestamp);
+      result=db.prepare("INSERT INTO users (public_id,name,email,password_hash,login_code_hash,country,currency,first_name,last_name,phone,referral_code,registration_ip,email_verified_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(id,name,email,passwordHashValue,loginCodeHash,country,currency,firstName,lastName,phone,code,ip,null,timestamp,timestamp);
       db.prepare("INSERT INTO wallets (user_id,currency,available_cents,created_at,updated_at) VALUES (?,?,0,?,?)").run(result.lastInsertRowid,currency,timestamp,timestamp);
       db.prepare("INSERT INTO affiliates (user_id,affiliate_id,status,created_at,updated_at) VALUES (?,?,'inactive',?,?)").run(result.lastInsertRowid,publicId("AFF"),timestamp,timestamp);
       if(referrer)db.prepare("INSERT INTO referrals (public_id,referrer_user_id,referred_user_id,referral_code,created_at) VALUES (?,?,?,?,?)").run(publicId("RFL"),referrer.id,result.lastInsertRowid,requestedReferral,timestamp);
@@ -255,8 +340,10 @@ async function api(req, res, url) {
       db.prepare("INSERT INTO audit_logs (actor_type,actor_id,action,entity_type,entity_id,details_json,ip_address,created_at) VALUES ('user',?,'registered','user',?,?,?,?)").run(id,id,JSON.stringify({referralCode:requestedReferral||null}),ip,timestamp);
       db.exec("COMMIT");
     } catch(error) { db.exec("ROLLBACK"); throw error; }
-    const user=db.prepare("SELECT * FROM users WHERE id=?").get(result.lastInsertRowid),token=createSession(user,req);
-    return json(res,201,{message:"Account created. Your login code is ready.",verificationRequired:false,user:userPayload(user)}, {"Set-Cookie":sessionCookie(token)});
+    const user=db.prepare("SELECT * FROM users WHERE id=?").get(result.lastInsertRowid);
+    let verification;
+    try{verification=await issueVerificationCode(user,"registration",req,{force:true})}catch(error){db.prepare("DELETE FROM users WHERE id=?").run(user.id);throw error}
+    return json(res,201,{message:"Account created. Confirm the code sent to your email.",verificationRequired:true,purpose:"registration",email:user.email,maskedEmail:maskedEmail(user.email),...verification},{"Set-Cookie":clearCookie()});
   }
 
   if (req.method === "POST" && url.pathname === "/api/login") {
@@ -268,16 +355,17 @@ async function api(req, res, url) {
     if(!validLogin){attempts.count++;loginAttempts.set(ip,attempts);return json(res,401,{error:"Incorrect email address or login code."})}
     if(user.status!=="active")return json(res,403,{error:"This account is not active."});
     loginAttempts.delete(ip);
-    const token=createSession(user,req);audit(user.public_id,"signed_in_with_login_code","session",null,{},req);
-    return json(res,200,{message:"You are signed in.",verificationRequired:false,user:userPayload(user)},{"Set-Cookie":sessionCookie(token)});
+    const purpose=user.email_verified_at?"login":"registration",verification=await issueVerificationCode(user,purpose,req,{force:true});
+    audit(user.public_id,purpose==="login"?"requested_sign_in_code":"requested_registration_code","email_verification",null,{},req);
+    return json(res,200,{message:purpose==="login"?"Confirm the code sent to your email.":"Confirm your email to finish setting up your account.",verificationRequired:true,purpose,email:user.email,maskedEmail:maskedEmail(user.email),...verification},{"Set-Cookie":clearCookie()});
   }
   if(req.method==="POST"&&url.pathname==="/api/auth/verify-registration"){
     const input=await body(req),email=String(input.email||"").trim().toLowerCase(),code=String(input.code||"").trim(),user=db.prepare("SELECT * FROM users WHERE email=?").get(email);
     if(!user)return json(res,422,{error:"This confirmation request is invalid."});
     verifyEmailCode(user,"registration",code);
     const timestamp=now();db.prepare("UPDATE users SET email_verified_at=COALESCE(email_verified_at,?),updated_at=? WHERE id=?").run(timestamp,timestamp,user.id);
-    const verified=db.prepare("SELECT * FROM users WHERE id=?").get(user.id),token=createSession(verified,req);audit(verified.public_id,"confirmed_email","user",verified.public_id,{},req);
-    return json(res,200,{message:"Email confirmed. Your account is ready.",user:userPayload(verified)},{"Set-Cookie":sessionCookie(token)});
+    const verified=db.prepare("SELECT * FROM users WHERE id=?").get(user.id),token=createSession(verified,req);audit(verified.public_id,"confirmed_email","user",verified.public_id,{},req);const welcomeEmailSent=await sendWelcomeEmail(verified,req);
+    return json(res,200,{message:"Email confirmed. Your account is ready.",user:userPayload(verified),welcomeEmailSent},{"Set-Cookie":sessionCookie(token)});
   }
   if(req.method==="POST"&&url.pathname==="/api/auth/verify-login"){
     const input=await body(req),email=String(input.email||"").trim().toLowerCase(),code=String(input.code||"").trim(),user=db.prepare("SELECT * FROM users WHERE email=? AND status='active'").get(email);
@@ -296,26 +384,36 @@ async function api(req, res, url) {
   }
   if(req.method==="POST"&&url.pathname==="/api/password/forgot"){
     const input=await body(req),email=String(input.email||"").trim().toLowerCase(),user=db.prepare("SELECT id,email FROM users WHERE email=? AND status='active'").get(email);
-    if(user){const token=crypto.randomBytes(32).toString("base64url"),timestamp=now(),expires=new Date(Date.now()+30*60000).toISOString();db.prepare("UPDATE password_reset_tokens SET used_at=? WHERE user_id=? AND used_at IS NULL").run(timestamp,user.id);db.prepare("INSERT INTO password_reset_tokens (user_id,token_hash,expires_at,requested_ip,created_at) VALUES (?,?,?,?,?)").run(user.id,sha256(token),expires,requestIp(req),timestamp);const link=`${req.headers["x-forwarded-proto"]||"http"}://${req.headers.host}/reset-password.html?token=${encodeURIComponent(token)}`;try{await sendPasswordReset(user.email,link)}catch(error){console.error(error.message)}}
-    return json(res,200,{message:"If an account exists for that email, a password reset link has been sent."});
+    if(user){const token=crypto.randomBytes(32).toString("base64url"),timestamp=now(),expires=new Date(Date.now()+30*60000).toISOString();db.prepare("UPDATE password_reset_tokens SET used_at=? WHERE user_id=? AND used_at IS NULL").run(timestamp,user.id);db.prepare("INSERT INTO password_reset_tokens (user_id,token_hash,expires_at,requested_ip,created_at) VALUES (?,?,?,?,?)").run(user.id,sha256(token),expires,requestIp(req),timestamp);const link=publicUrl(req,`/reset-password.html?token=${encodeURIComponent(token)}`);try{await sendPasswordReset(user.email,link)}catch(error){console.error(error.message)}}
+    return json(res,200,{message:"If an account exists for that email, a login-code reset link has been sent."});
   }
   if(req.method==="POST"&&url.pathname==="/api/password/reset"){
-    const input=await body(req),token=String(input.token||""),password=String(input.password||""),confirmation=String(input.passwordConfirmation||"");
-    if(!validPassword(password))return json(res,422,{error:"Use at least 8 characters with uppercase, lowercase, and a number."});if(password!==confirmation)return json(res,422,{error:"Passwords do not match."});
-    const record=db.prepare("SELECT * FROM password_reset_tokens WHERE token_hash=? AND used_at IS NULL AND expires_at>?").get(sha256(token),now());if(!record)return json(res,422,{error:"This password reset link is invalid or has expired."});
-    const timestamp=now(),hash=await passwordHash(password);db.exec("BEGIN IMMEDIATE");try{db.prepare("UPDATE users SET password_hash=?,updated_at=? WHERE id=?").run(hash,timestamp,record.user_id);db.prepare("UPDATE password_reset_tokens SET used_at=? WHERE id=?").run(timestamp,record.id);db.prepare("DELETE FROM sessions WHERE user_id=?").run(record.user_id);db.exec("COMMIT")}catch(error){db.exec("ROLLBACK");throw error}
-    return json(res,200,{message:"Password updated. You can now sign in."});
+    const input=await body(req),token=String(input.token||""),loginCode=String(input.loginCode||input.password||""),confirmation=String(input.loginCodeConfirmation||input.passwordConfirmation||"");
+    if(!/^\d{6}$/.test(loginCode))return json(res,422,{error:"Choose a six-digit login code."});if(loginCode!==confirmation)return json(res,422,{error:"Login codes do not match."});
+    const record=db.prepare("SELECT * FROM password_reset_tokens WHERE token_hash=? AND used_at IS NULL AND expires_at>?").get(sha256(token),now());if(!record)return json(res,422,{error:"This login-code reset link is invalid or has expired."});
+    const timestamp=now(),hash=await passwordHash(loginCode);db.exec("BEGIN IMMEDIATE");try{db.prepare("UPDATE users SET login_code_hash=?,updated_at=? WHERE id=?").run(hash,timestamp,record.user_id);db.prepare("UPDATE password_reset_tokens SET used_at=? WHERE id=?").run(timestamp,record.id);db.prepare("DELETE FROM sessions WHERE user_id=?").run(record.user_id);db.exec("COMMIT")}catch(error){db.exec("ROLLBACK");throw error}
+    const updatedUser=db.prepare("SELECT email,name FROM users WHERE id=?").get(record.user_id);await safeTransactionalEmail({to:updatedUser.email,kind:"login_code_changed",subject:"Your StockPrime login code was changed",html:emailTemplate({eyebrow:"Security alert",title:"Login code changed",intro:"Your private six-digit StockPrime login code was changed successfully.",note:"All existing sessions were signed out. If you did not make this change, contact support immediately."})});
+    return json(res,200,{message:"Login code updated. You can now sign in."});
   }
   if(req.method==="POST"&&url.pathname==="/api/password/change"){
-    const user=requireUser(req,res);if(!user)return;const input=await body(req),current=String(input.currentPassword||""),password=String(input.newPassword||""),confirmation=String(input.passwordConfirmation||""),record=db.prepare("SELECT password_hash FROM users WHERE id=?").get(user.id);
-    if(!(await passwordMatches(current,record.password_hash)))return json(res,422,{error:"Current password is incorrect."});if(!validPassword(password))return json(res,422,{error:"Use at least 8 characters with uppercase, lowercase, and a number."});if(password!==confirmation)return json(res,422,{error:"Passwords do not match."});
-    db.prepare("UPDATE users SET password_hash=?,updated_at=? WHERE id=?").run(await passwordHash(password),now(),user.id);db.prepare("DELETE FROM sessions WHERE user_id=? AND token_hash<>?").run(user.id,sha256(cookies(req).stockprime_session));return json(res,200,{message:"Password changed successfully."});
+    const user=requireUser(req,res);if(!user)return;const input=await body(req),current=String(input.currentLoginCode||input.currentPassword||""),loginCode=String(input.newLoginCode||input.newPassword||""),confirmation=String(input.loginCodeConfirmation||input.passwordConfirmation||""),record=db.prepare("SELECT login_code_hash FROM users WHERE id=?").get(user.id);
+    if(!/^\d{6}$/.test(current)||!(await passwordMatches(current,record.login_code_hash)))return json(res,422,{error:"Current login code is incorrect."});if(!/^\d{6}$/.test(loginCode))return json(res,422,{error:"Choose a six-digit login code."});if(loginCode!==confirmation)return json(res,422,{error:"Login codes do not match."});
+    db.prepare("UPDATE users SET login_code_hash=?,updated_at=? WHERE id=?").run(await passwordHash(loginCode),now(),user.id);db.prepare("DELETE FROM sessions WHERE user_id=? AND token_hash<>?").run(user.id,sha256(cookies(req).stockprime_session));const emailSent=await safeTransactionalEmail({to:user.email,kind:"login_code_changed",subject:"Your StockPrime login code was changed",html:emailTemplate({eyebrow:"Security alert",title:"Login code changed",intro:"Your private six-digit StockPrime login code was changed successfully.",note:"Other signed-in sessions were closed. If you did not make this change, contact support immediately."})});return json(res,200,{message:"Login code changed successfully.",emailSent});
   }
   if(req.method==="POST"&&url.pathname==="/api/admin/login"){
     const input=await body(req),email=String(input.email||"").trim().toLowerCase(),password=String(input.password||""),expectedEmail=String(process.env.ADMIN_EMAIL||"admin@tesla.test").toLowerCase(),expectedPassword=process.env.ADMIN_PASSWORD||"Admin123!";
     if(email!==expectedEmail||password!==expectedPassword)return json(res,401,{error:"Incorrect administrator email or password."});const token=crypto.randomBytes(32).toString("base64url");adminSessions.set(sha256(token),{email,name:"Super Admin",expiresAt:Date.now()+8*3600000});return json(res,200,{message:"Administrator signed in.",admin:{email,name:"Super Admin",role:"Super Admin"}},{"Set-Cookie":adminCookie(token)});
   }
   if(req.method==="POST"&&url.pathname==="/api/admin/logout"){const token=cookies(req).stockprime_admin_session;if(token)adminSessions.delete(sha256(token));return json(res,200,{message:"Signed out."},{"Set-Cookie":clearAdminCookie()})}
+  if(req.method==="GET"&&url.pathname==="/api/admin/support/conversations"){
+    if(!requireAdmin(req,res))return;const conversations=db.prepare(`SELECT c.public_id AS id,c.visitor_name AS visitorName,c.visitor_email AS visitorEmail,c.status,c.created_at AS createdAt,c.updated_at AS updatedAt,COUNT(m.id) AS messageCount,(SELECT message FROM support_messages latest WHERE latest.conversation_id=c.id ORDER BY latest.id DESC LIMIT 1) AS lastMessage,(SELECT sender_type FROM support_messages latest WHERE latest.conversation_id=c.id ORDER BY latest.id DESC LIMIT 1) AS lastSenderType FROM support_conversations c LEFT JOIN support_messages m ON m.conversation_id=c.id GROUP BY c.id ORDER BY c.updated_at DESC LIMIT 200`).all();return json(res,200,{conversations});
+  }
+  if(req.method==="GET"&&/^\/api\/admin\/support\/conversations\/[^/]+\/messages$/.test(url.pathname)){
+    if(!requireAdmin(req,res))return;const conversationId=decodeURIComponent(url.pathname.split("/")[5]),conversation=db.prepare("SELECT id,public_id AS publicId,visitor_name AS visitorName,visitor_email AS visitorEmail,status,created_at AS createdAt,updated_at AS updatedAt FROM support_conversations WHERE public_id=?").get(conversationId);if(!conversation)return json(res,404,{error:"Support conversation was not found."});const messages=db.prepare("SELECT public_id AS id,sender_type AS senderType,sender_name AS senderName,message,created_at AS createdAt FROM support_messages WHERE conversation_id=? ORDER BY support_messages.id").all(conversation.id);delete conversation.id;return json(res,200,{conversation,messages});
+  }
+  if(req.method==="POST"&&/^\/api\/admin\/support\/conversations\/[^/]+\/messages$/.test(url.pathname)){
+    const admin=requireAdmin(req,res);if(!admin)return;const conversationId=decodeURIComponent(url.pathname.split("/")[5]),conversation=db.prepare("SELECT id,status FROM support_conversations WHERE public_id=?").get(conversationId);if(!conversation)return json(res,404,{error:"Support conversation was not found."});const input=await body(req),message=String(input.message||"").trim();if(message.length<2||message.length>1000)return json(res,422,{error:"Enter a reply between 2 and 1,000 characters."});const timestamp=now();db.prepare("INSERT INTO support_messages (public_id,conversation_id,sender_type,sender_name,message,created_at) VALUES (?,?,'admin',?,?,?)").run(publicId("MSG"),conversation.id,admin.name||"StockPrime Support",message,timestamp);db.prepare("UPDATE support_conversations SET status='open',updated_at=? WHERE id=?").run(timestamp,conversation.id);return json(res,201,{message:"Reply sent to the visitor."});
+  }
   if(req.method==="GET"&&url.pathname==="/api/admin/referral-settings"){
     if(!requireAdmin(req,res))return;const settings=Object.fromEntries(db.prepare("SELECT key,value FROM platform_settings").all().map(row=>[row.key,row.value]));return json(res,200,{settings});
   }
@@ -331,7 +429,7 @@ async function api(req, res, url) {
     if(!requireAdmin(req,res))return;const withdrawals=db.prepare("SELECT w.public_id AS id,w.amount_cents,w.method,w.destination,w.status,w.admin_note,w.created_at,w.updated_at,u.name,u.email FROM affiliate_withdrawals w JOIN users u ON u.id=w.user_id ORDER BY w.created_at DESC").all();return json(res,200,{withdrawals});
   }
   if(req.method==="POST"&&/^\/api\/admin\/affiliate-withdrawals\/[^/]+\/status$/.test(url.pathname)){
-    const admin=requireAdmin(req,res);if(!admin)return;const input=await body(req),status=String(input.status||"").toLowerCase(),note=String(input.note||"").trim(),id=decodeURIComponent(url.pathname.split("/")[4]);if(!["approved","rejected","paid"].includes(status))return json(res,422,{error:"Choose a valid withdrawal status."});const result=db.prepare("UPDATE affiliate_withdrawals SET status=?,admin_note=?,updated_at=? WHERE public_id=? AND status IN ('pending','approved')").run(status,note,now(),id);if(!result.changes)return json(res,404,{error:"Pending withdrawal was not found."});return json(res,200,{message:`Affiliate withdrawal ${status}.`});
+    const admin=requireAdmin(req,res);if(!admin)return;const input=await body(req),status=String(input.status||"").toLowerCase(),note=String(input.note||"").trim(),id=decodeURIComponent(url.pathname.split("/")[4]);if(!["approved","rejected","paid"].includes(status))return json(res,422,{error:"Choose a valid withdrawal status."});const withdrawal=db.prepare("SELECT w.*,u.email,u.name FROM affiliate_withdrawals w JOIN users u ON u.id=w.user_id WHERE w.public_id=?").get(id);if(!withdrawal)return json(res,404,{error:"Pending withdrawal was not found."});const result=db.prepare("UPDATE affiliate_withdrawals SET status=?,admin_note=?,updated_at=? WHERE public_id=? AND status IN ('pending','approved')").run(status,note,now(),id);if(!result.changes)return json(res,409,{error:"This withdrawal can no longer be updated."});const emailSent=await sendWalletEventEmail(withdrawal,{type:"withdrawal",status,amountCents:withdrawal.amount_cents,currency:"USD",method:withdrawal.method,transactionId:id});return json(res,200,{message:`Affiliate withdrawal ${status}.`,emailSent});
   }
   if(req.method==="GET"&&url.pathname==="/api/admin/users"){
     if(!requireAdmin(req,res))return;const users=db.prepare("SELECT public_id AS id,name,email,status,created_at AS joined FROM users ORDER BY created_at DESC").all();return json(res,200,{users:users.map(user=>({...user,status:user.status[0].toUpperCase()+user.status.slice(1),kyc:"Not Submitted"}))});
@@ -389,7 +487,8 @@ async function api(req, res, url) {
       db.prepare("INSERT INTO audit_logs (actor_type,actor_id,action,entity_type,entity_id,details_json,ip_address,created_at) VALUES ('admin',?,'updated_payment_status','wallet_transaction',?,?,?,?)").run(admin.email,paymentId,JSON.stringify({status,previousStatus:tx.status}),requestIp(req),timestamp);
       db.exec("COMMIT");
     }catch(error){db.exec("ROLLBACK");throw error}
-    return json(res,200,{message:`Payment ${status}.`});
+    const owner=db.prepare("SELECT email,name FROM users WHERE id=?").get(tx.user_id),emailSent=owner?await sendWalletEventEmail(owner,{type:"deposit",status,amountCents:tx.amount_cents,currency:tx.currency,method:tx.method,transactionId:paymentId}):false;
+    return json(res,200,{message:`Payment ${status}.`,emailSent});
   }
   if(req.method==="POST"&&url.pathname==="/api/admin/payments/status"){
     const admin=requireAdmin(req,res);if(!admin)return;
@@ -408,7 +507,8 @@ async function api(req, res, url) {
       db.prepare("INSERT INTO audit_logs (actor_type,actor_id,action,entity_type,entity_id,details_json,ip_address,created_at) VALUES ('admin',?,'updated_payment_status','wallet_transaction',?,?,?,?)").run(admin.email,paymentId,JSON.stringify({status,previousStatus:tx.status}),requestIp(req),timestamp);
       db.exec("COMMIT");
     }catch(error){db.exec("ROLLBACK");throw error}
-    return json(res,200,{message:`Payment ${status}.`});
+    const owner=db.prepare("SELECT email,name FROM users WHERE id=?").get(tx.user_id),emailSent=owner?await sendWalletEventEmail(owner,{type:"deposit",status,amountCents:tx.amount_cents,currency:tx.currency,method:tx.method,transactionId:paymentId}):false;
+    return json(res,200,{message:`Payment ${status}.`,emailSent});
   }
   if(req.method==="GET"&&url.pathname==="/api/notifications"){
     const user=requireUser(req,res);if(!user)return;
@@ -431,10 +531,12 @@ async function api(req, res, url) {
   if(req.method==="POST"&&url.pathname==="/api/admin/notifications"){
     const admin=requireAdmin(req,res);if(!admin)return;const input=await body(req),title=String(input.title||"").trim(),message=String(input.message||"").trim(),category=String(input.category||"general"),recipient=String(input.recipient||"").trim().toLowerCase();
     if(title.length<3||title.length>120)return json(res,422,{error:"Enter a title between 3 and 120 characters."});if(message.length<3||message.length>2000)return json(res,422,{error:"Enter a message between 3 and 2,000 characters."});if(!["general","account","payment","investment","vehicle","security"].includes(category))return json(res,422,{error:"Select a valid notification category."});
-    let recipientId=null;if(recipient){const user=db.prepare("SELECT id FROM users WHERE email=?").get(recipient);if(!user)return json(res,404,{error:"No user exists with that email address."});recipientId=user.id}
+    let recipientId=null,targetUser=null;if(recipient){targetUser=db.prepare("SELECT id,email,name FROM users WHERE email=? AND status='active'").get(recipient);if(!targetUser)return json(res,404,{error:"No active user exists with that email address."});recipientId=targetUser.id}
     const id=publicId("NTF"),timestamp=now();db.prepare("INSERT INTO notifications (public_id,recipient_user_id,title,message,category,created_by,created_at) VALUES (?,?,?,?,?,?,?)").run(id,recipientId,title,message,category,admin.email,timestamp);
     db.prepare("INSERT INTO audit_logs (actor_type,actor_id,action,entity_type,entity_id,details_json,ip_address,created_at) VALUES ('admin',?,'created_notification','notification',?,?,?,?)").run(admin.email,id,JSON.stringify({recipient:recipient||"all users",category}),requestIp(req),timestamp);
-    return json(res,201,{message:recipient?"Notification sent to the user.":"Notification sent to all users.",notificationId:id});
+    const targets=targetUser?[targetUser]:db.prepare("SELECT id,email,name FROM users WHERE status='active' AND email_verified_at IS NOT NULL ORDER BY id").all(),delivery=await sendNotificationBatch(targets,{title,message,category});
+    const baseMessage=recipient?"Notification sent to the user.":`Notification sent to ${targets.length} users.`,emailMessage=delivery.failed?` Email delivered to ${delivery.sent}; ${delivery.failed} could not be delivered.`:` Email delivered to ${delivery.sent}.`;
+    return json(res,201,{message:`${baseMessage}${emailMessage}`,notificationId:id,email:delivery});
   }
   if (req.method === "POST" && url.pathname === "/api/logout") {
     const token=cookies(req).stockprime_session;if(token)db.prepare("DELETE FROM sessions WHERE token_hash=?").run(sha256(token));
@@ -450,7 +552,7 @@ async function api(req, res, url) {
     const user=requireUser(req,res);if(!user)return;if(!settingEnabled("affiliate_program_enabled"))return json(res,503,{error:"The affiliate program is currently unavailable."});const affiliate=db.prepare("SELECT * FROM affiliates WHERE user_id=?").get(user.id);if(affiliate.status==="active")return json(res,200,{message:"Your affiliate account is already active."});const fee=settingNumber("affiliate_membership_fee_cents",5000),wallet=db.prepare("SELECT * FROM wallets WHERE user_id=?").get(user.id),timestamp=now();if(wallet.available_cents<fee)return json(res,409,{error:`You need $${(fee/100).toFixed(2)} in your available wallet to activate affiliate membership.`});db.exec("BEGIN IMMEDIATE");try{if(fee>0){db.prepare("UPDATE wallets SET available_cents=available_cents-?,version=version+1,updated_at=? WHERE id=? AND available_cents>=?").run(fee,timestamp,wallet.id,fee);db.prepare("INSERT INTO wallet_transactions (public_id,wallet_id,user_id,type,direction,amount_cents,currency,method,reference,status,metadata_json,created_at,updated_at) VALUES (?,?,?,'adjustment','debit',?,?,'wallet','Affiliate Membership Fee','confirmed',?,?,?)").run(publicId("TXN"),wallet.id,user.id,fee,wallet.currency,JSON.stringify({kind:"affiliate_membership"}),timestamp,timestamp)}db.prepare("UPDATE affiliates SET status='active',activated_at=?,updated_at=? WHERE user_id=?").run(timestamp,timestamp,user.id);db.exec("COMMIT")}catch(error){db.exec("ROLLBACK");throw error}return json(res,200,{message:"Affiliate membership activated successfully."});
   }
   if(req.method==="POST"&&url.pathname==="/api/affiliate/withdrawals"){
-    const user=requireUser(req,res);if(!user)return;const input=await body(req),amount=cents(input.amount),method=String(input.method||"").trim(),destination=String(input.destination||"").trim(),affiliate=db.prepare("SELECT status FROM affiliates WHERE user_id=?").get(user.id);if(affiliate?.status!=="active")return json(res,403,{error:"An active affiliate membership is required."});const earned=db.prepare("SELECT COALESCE(SUM(commission_cents),0) value FROM referrals WHERE referrer_user_id=?").get(user.id).value,reserved=db.prepare("SELECT COALESCE(SUM(amount_cents),0) value FROM affiliate_withdrawals WHERE user_id=? AND status IN ('pending','approved','paid')").get(user.id).value;if(!Number.isSafeInteger(amount)||amount<100)return json(res,422,{error:"Withdrawal must be at least $1.00."});if(amount>earned-reserved)return json(res,409,{error:"Withdrawal exceeds your available affiliate earnings."});if(!method||destination.length<4)return json(res,422,{error:"Enter a payment method and destination."});const timestamp=now(),id=publicId("AWW");db.prepare("INSERT INTO affiliate_withdrawals (public_id,user_id,amount_cents,method,destination,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id,user.id,amount,method,destination,timestamp,timestamp);return json(res,201,{message:"Affiliate withdrawal submitted for approval.",withdrawalId:id});
+    const user=requireUser(req,res);if(!user)return;const input=await body(req),amount=cents(input.amount),method=String(input.method||"").trim(),destination=String(input.destination||"").trim(),affiliate=db.prepare("SELECT status FROM affiliates WHERE user_id=?").get(user.id);if(affiliate?.status!=="active")return json(res,403,{error:"An active affiliate membership is required."});const earned=db.prepare("SELECT COALESCE(SUM(commission_cents),0) value FROM referrals WHERE referrer_user_id=?").get(user.id).value,reserved=db.prepare("SELECT COALESCE(SUM(amount_cents),0) value FROM affiliate_withdrawals WHERE user_id=? AND status IN ('pending','approved','paid')").get(user.id).value;if(!Number.isSafeInteger(amount)||amount<100)return json(res,422,{error:"Withdrawal must be at least $1.00."});if(amount>earned-reserved)return json(res,409,{error:"Withdrawal exceeds your available affiliate earnings."});if(!method||destination.length<4)return json(res,422,{error:"Enter a payment method and destination."});const timestamp=now(),id=publicId("AWW");db.prepare("INSERT INTO affiliate_withdrawals (public_id,user_id,amount_cents,method,destination,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id,user.id,amount,method,destination,timestamp,timestamp);const emailSent=await sendWalletEventEmail(user,{type:"withdrawal",status:"pending",amountCents:amount,currency:"USD",method,transactionId:id});return json(res,201,{message:"Affiliate withdrawal submitted for approval.",withdrawalId:id,emailSent});
   }
   if (req.method === "GET" && url.pathname === "/api/wallet") {
     const user=requireUser(req,res);if(!user)return;const wallet=db.prepare("SELECT * FROM wallets WHERE user_id=?").get(user.id);
@@ -460,10 +562,6 @@ async function api(req, res, url) {
     const user=requireUser(req,res);if(!user)return;const rows=db.prepare("SELECT public_id,type,direction,amount_cents,fee_cents,currency,method,reference,status,created_at FROM wallet_transactions WHERE user_id=? ORDER BY created_at DESC LIMIT 100").all(user.id);
     return json(res,200,{transactions:rows});
   }
-  if (req.method === "GET" && url.pathname === "/api/vehicles") {
-    const rows=db.prepare("SELECT public_id,title,year,make,model,price_cents,mileage,color,image_path,status,featured FROM vehicles WHERE status='available' ORDER BY featured DESC,id DESC").all();
-    return json(res,200,{vehicles:rows});
-  }
   if (req.method === "POST" && url.pathname === "/api/wallet/deposits") {
     const user=requireUser(req,res);if(!user)return;const input=await body(req),amount=cents(input.amount),method=String(input.method||"").trim(),reference=String(input.reference||"").trim();
     if(!Number.isSafeInteger(amount)||amount<100)return json(res,422,{error:"Deposit must be at least $1.00."});
@@ -471,7 +569,7 @@ async function api(req, res, url) {
     if(reference.length<8)return json(res,422,{error:"Enter a valid transaction reference."});
     const wallet=db.prepare("SELECT * FROM wallets WHERE user_id=?").get(user.id),id=publicId("TXN"),timestamp=now();
     db.exec("BEGIN IMMEDIATE");try{db.prepare("INSERT INTO wallet_transactions (public_id,wallet_id,user_id,type,direction,amount_cents,currency,method,reference,status,created_at,updated_at) VALUES (?,?,?,'deposit','credit',?,?,?,?, 'pending',?,?)").run(id,wallet.id,user.id,amount,wallet.currency,method,reference,timestamp,timestamp);db.prepare("UPDATE wallets SET pending_cents=pending_cents+?,version=version+1,updated_at=? WHERE id=?").run(amount,timestamp,wallet.id);db.exec("COMMIT")}catch(e){db.exec("ROLLBACK");throw e}
-    audit(user.public_id,"created_deposit","wallet_transaction",id,{amount,method},req);return json(res,201,{message:"Deposit submitted for verification.",transactionId:id});
+    audit(user.public_id,"created_deposit","wallet_transaction",id,{amount,method},req);const emailSent=await sendWalletEventEmail(user,{type:"deposit",status:"pending",amountCents:amount,currency:wallet.currency,method,transactionId:id});return json(res,201,{message:"Deposit submitted for verification.",transactionId:id,emailSent});
   }
   if (req.method === "POST" && url.pathname === "/api/wallet/withdrawals") {
     const user=requireUser(req,res);if(!user)return;const input=await body(req),amount=cents(input.amount),method=String(input.method||"").trim(),destination=String(input.destination||"").trim(),fee=Math.round(amount*.015);
@@ -479,7 +577,7 @@ async function api(req, res, url) {
     if(destination.length<6)return json(res,422,{error:"Enter a valid withdrawal destination."});
     const wallet=db.prepare("SELECT * FROM wallets WHERE user_id=?").get(user.id);if(wallet.available_cents<amount+fee)return json(res,409,{error:"Insufficient available balance."});
     const id=publicId("TXN"),timestamp=now();db.exec("BEGIN IMMEDIATE");try{const updated=db.prepare("UPDATE wallets SET available_cents=available_cents-?,pending_cents=pending_cents+?,version=version+1,updated_at=? WHERE id=? AND available_cents>=?").run(amount+fee,amount,timestamp,wallet.id,amount+fee);if(!updated.changes)throw Object.assign(new Error("Insufficient available balance."),{status:409});db.prepare("INSERT INTO wallet_transactions (public_id,wallet_id,user_id,type,direction,amount_cents,fee_cents,currency,method,reference,status,metadata_json,created_at,updated_at) VALUES (?,?,?,'withdrawal','debit',?,?,?,?,?,'pending',?,?,?)").run(id,wallet.id,user.id,amount,fee,wallet.currency,method,destination,JSON.stringify({destination}),timestamp,timestamp);db.exec("COMMIT")}catch(e){db.exec("ROLLBACK");throw e}
-    audit(user.public_id,"created_withdrawal","wallet_transaction",id,{amount,method},req);return json(res,201,{message:"Withdrawal request submitted.",transactionId:id});
+    audit(user.public_id,"created_withdrawal","wallet_transaction",id,{amount,method},req);const emailSent=await sendWalletEventEmail(user,{type:"withdrawal",status:"pending",amountCents:amount,feeCents:fee,currency:wallet.currency,method,transactionId:id});return json(res,201,{message:"Withdrawal request submitted.",transactionId:id,emailSent});
   }
   if (req.method === "GET" && url.pathname === "/api/investment-plans") {
     const plans=db.prepare("SELECT public_id,name,category,nav_cents,minimum_cents,maximum_cents,daily_return_bps,duration_days,projected_return_bps,management_fee_bps,risk_level,description FROM investment_plans WHERE status='active' ORDER BY id").all();return json(res,200,{plans});
@@ -547,6 +645,7 @@ async function api(req, res, url) {
       COALESCE(SUM(CASE WHEN type='deposit' AND status='confirmed' THEN amount_cents ELSE 0 END),0) total_deposits,
       COALESCE(SUM(CASE WHEN type='withdrawal' AND status IN ('pending','processing','confirmed') THEN amount_cents ELSE 0 END),0) total_withdrawals,
       COALESCE(SUM(CASE WHEN type='withdrawal' AND status IN ('pending','processing') THEN amount_cents ELSE 0 END),0) pending_withdrawals,
+      COALESCE(SUM(CASE WHEN type='bonus' AND direction='credit' AND status='confirmed' THEN amount_cents ELSE 0 END),0) bonus_cents,
       COALESCE(SUM(CASE WHEN type='deposit' AND status='confirmed' AND created_at>=? THEN amount_cents ELSE 0 END),0) month_deposits,
       COALESCE(SUM(CASE WHEN type='withdrawal' AND status IN ('pending','processing','confirmed') AND created_at>=? THEN amount_cents ELSE 0 END),0) month_withdrawals
       FROM wallet_transactions WHERE user_id=?`).get(monthStart.toISOString(),monthStart.toISOString(),user.id);
@@ -557,9 +656,9 @@ async function api(req, res, url) {
     const investmentValues=investments.map(investmentValue);
     const stockValues=activeStocks.map(order=>({...order,...projectedValue(order.principal_cents,order.annual_roi_bps,order.created_at)}));
     const sum=(items,key)=>items.reduce((total,item)=>total+Number(item[key]||0),0);
-    const vehicles=db.prepare("SELECT public_id,title,year,model,price_cents,mileage,color,image_path,status FROM vehicles WHERE status='available' ORDER BY featured DESC,id DESC LIMIT 6").all();
+    const lastAccess=db.prepare("SELECT MAX(created_at) value FROM sessions WHERE user_id=?").get(user.id).value||user.created_at;
     return json(res,200,{
-      user:userPayload(user),wallet,totals,transactions,vehicles,
+      user:userPayload(user),lastAccess,wallet,totals,transactions,
       portfolio:{
         investedCents:sum(investmentValues,"principalCents")+sum(stockValues,"principalCents"),
         currentValueCents:sum(investmentValues,"currentValueCents")+sum(stockValues,"currentValueCents"),
