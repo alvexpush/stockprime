@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "db:check": "node scripts/check-db.js",
+    "production:prepare": "node scripts/prepare-production-env.js",
     "email:authorize": "node scripts/authorize-zoho-email.js",
     "email:check": "node scripts/check-zoho-email.js",
     "test:email": "node scripts/check-transactional-email-flows.js",
