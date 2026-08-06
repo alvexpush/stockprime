@@ -249,16 +249,21 @@ function kycResponse(row){
   return {id:row.public_id,status:row.status,firstName:row.first_name,lastName:row.last_name,dateOfBirth:row.date_of_birth,nationality:row.nationality,documentType:row.document_type,documentLast4:String(row.document_number||"").slice(-4),documentFrontName:row.document_front_name||"",selfieName:row.selfie_name||"",address:row.address,city:row.city,country:row.country,submittedAt:row.submitted_at,reviewedAt:row.reviewed_at,reviewNote:row.review_note||""};
 }
 function maskedEmail(email){const [name,domain]=String(email).split("@");return `${name.slice(0,2)}${"*".repeat(Math.max(1,name.length-2))}@${domain}`}
+function isLocalDevelopmentRequest(req){
+  const hostname=String(req.headers.host||"").trim().toLowerCase().replace(/^\[/,"").replace(/\](?::\d+)?$/,"").replace(/:\d+$/,"");
+  return hostname==="localhost"||hostname==="127.0.0.1"||hostname==="::1";
+}
 async function issueVerificationCode(user,purpose,req,{force=false}={}){
-  if(productionRuntime&&!emailDeliveryStatus().configured)throw Object.assign(new Error("Email verification security is not configured."),{status:503});
+  const emailStatus=emailDeliveryStatus(),localDevelopment=isLocalDevelopmentRequest(req);
+  if((productionRuntime&&!emailStatus.configured)||(emailStatus.provider==="development"&&!localDevelopment))throw Object.assign(new Error("Email verification security is not configured."),{status:503});
   const latest=db.prepare("SELECT created_at FROM email_verification_codes WHERE user_id=? AND purpose=? ORDER BY id DESC LIMIT 1").get(user.id,purpose);
   if(!force&&latest&&Date.now()-new Date(latest.created_at).getTime()<30000)throw Object.assign(new Error("Please wait 30 seconds before requesting another code."),{status:429});
   const code=String(crypto.randomInt(0,1000000)).padStart(6,"0"),timestamp=now(),expires=new Date(Date.now()+verificationCodeMinutes*60000).toISOString();
   db.prepare("UPDATE email_verification_codes SET used_at=? WHERE user_id=? AND purpose=? AND used_at IS NULL").run(timestamp,user.id,purpose);
   db.prepare("INSERT INTO email_verification_codes (user_id,purpose,code_hash,expires_at,requested_ip,created_at) VALUES (?,?,?,?,?,?)").run(user.id,purpose,verificationCodeHash(code),expires,requestIp(req),timestamp);
   try{await sendVerificationCode(user.email,code,purpose)}catch(error){console.error(error.message);throw Object.assign(new Error("We could not send the verification email. Please try again."),{status:502})}
-  const hasEmailProvider=emailDeliveryStatus().configured&&emailDeliveryStatus().provider!=="development";
-  return {developmentCode:!hasEmailProvider&&!productionRuntime?code:undefined,expiresInSeconds:verificationCodeMinutes*60};
+  const hasEmailProvider=emailStatus.configured&&emailStatus.provider!=="development";
+  return {developmentCode:!hasEmailProvider&&!productionRuntime&&localDevelopment?code:undefined,expiresInSeconds:verificationCodeMinutes*60};
 }
 function verifyEmailCode(user,purpose,code){
   const record=db.prepare("SELECT * FROM email_verification_codes WHERE user_id=? AND purpose=? AND used_at IS NULL ORDER BY id DESC LIMIT 1").get(user.id,purpose);

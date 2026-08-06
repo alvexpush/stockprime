@@ -2,9 +2,10 @@
   const pagePurpose=document.body.dataset.purpose;
   let state;try{state=JSON.parse(sessionStorage.getItem("stockprimeVerification")||"null")}catch{state=null}
   if(!state?.email||state.purpose!==pagePurpose){location.replace(pagePurpose==="registration"?"register.html":"login.html");return}
-  const form=document.querySelector("[data-verification-form]"),input=form.code,message=document.querySelector("[data-message]"),resend=document.querySelector("[data-resend]"),dev=document.querySelector("[data-development-code]");
+  const form=document.querySelector("[data-verification-form]"),input=form.code,message=document.querySelector("[data-message]"),resend=document.querySelector("[data-resend]"),dev=document.querySelector("[data-development-code]"),localDevelopment=["localhost","127.0.0.1","::1"].includes(location.hostname);
   document.querySelector("[data-email]").textContent=state.maskedEmail||state.email;
-  const showDevelopmentCode=code=>{if(!code){dev.hidden=true;return}dev.hidden=false;dev.innerHTML=`Local development code: <strong>${code}</strong>`;input.value=code};
+  if(!localDevelopment){delete state.developmentCode;sessionStorage.setItem("stockprimeVerification",JSON.stringify(state));dev.remove()}
+  const showDevelopmentCode=code=>{if(!localDevelopment||!dev)return;if(!code){dev.hidden=true;return}dev.hidden=false;dev.innerHTML=`Local development code: <strong>${code}</strong>`;input.value=code};
   showDevelopmentCode(state.developmentCode);
   const show=(text,type="")=>{message.textContent=text;message.className=`verify-message ${type}`};
   input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,6)});
