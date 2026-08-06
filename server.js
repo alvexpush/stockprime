@@ -150,7 +150,7 @@ async function sendZohoEmail({to,subject,html},retry=true){
 function configuredSecret(value){return Boolean(value)&&!/^(your_|generate_|change_|<)/i.test(String(value).trim())}
 function selectedEmailProvider(){
   const requested=String(process.env.EMAIL_PROVIDER||"").trim().toLowerCase(),zohoReady=["ZOHO_CLIENT_ID","ZOHO_CLIENT_SECRET","ZOHO_REFRESH_TOKEN","ZOHO_FROM_EMAIL"].every(key=>configuredSecret(process.env[key]));
-  if(productionRuntime&&zohoReady&&(requested===""||requested==="development"))return "zoho";
+  if(zohoReady&&(requested===""||requested==="development"||requested==="zoho"))return "zoho";
   if(["zoho","resend","development"].includes(requested))return requested;
   if(configuredSecret(process.env.RESEND_API_KEY))return "resend";
   return "development";
@@ -162,7 +162,7 @@ async function sendTransactionalEmail(message){
     let delivered=false;
     if(activeProvider==="zoho")delivered=await sendZohoEmail(message);
     else if(activeProvider==="resend"){if(!hasResend)throw new Error("Resend requires RESEND_API_KEY.");const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.AUTH_FROM_EMAIL||process.env.RESET_FROM_EMAIL||"StockPrime <onboarding@resend.dev>",to:[message.to],subject:message.subject,html:message.html}),signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error("Email could not be sent.");delivered=true}
-    else if(productionRuntime)throw new Error("Email delivery is not configured.");
+    else throw new Error("Email delivery is not configured.");
     db.prepare("UPDATE email_deliveries SET status=?,attempts=1,sent_at=? WHERE public_id=?").run(delivered?"sent":"skipped",delivered?now():null,deliveryId);
     return delivered;
   }catch(error){
@@ -172,15 +172,15 @@ async function sendTransactionalEmail(message){
 }
 function emailDeliveryStatus(){
   const provider=selectedEmailProvider();
-  if(provider==="development")return {provider:"development",configured:!productionRuntime,missing:productionRuntime?["EMAIL_PROVIDER"]:[]};
+  if(provider==="development")return {provider:"development",configured:false,missing:["EMAIL_PROVIDER"]};
   if(provider==="zoho"){
-    const required=["ZOHO_CLIENT_ID","ZOHO_CLIENT_SECRET","ZOHO_REFRESH_TOKEN","ZOHO_FROM_EMAIL",...(productionRuntime?["OTP_SECRET"]:[])];
+    const required=["ZOHO_CLIENT_ID","ZOHO_CLIENT_SECRET","ZOHO_REFRESH_TOKEN","ZOHO_FROM_EMAIL","OTP_SECRET"];
     const missing=required.filter(key=>!configuredSecret(process.env[key]));
     return {provider:"zoho",configured:missing.length===0,missing};
   }
   if(provider==="resend"){const configured=configuredSecret(process.env.RESEND_API_KEY);return {provider:"resend",configured,missing:configured?[]:["RESEND_API_KEY"]}}
   if(configuredSecret(process.env.RESEND_API_KEY))return {provider:"resend",configured:true,missing:[]};
-  return {provider:"development",configured:!productionRuntime,missing:productionRuntime?["EMAIL_PROVIDER"]:[]};
+  return {provider:"development",configured:false,missing:["EMAIL_PROVIDER"]};
 }
 function emailEscape(value){return String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]))}
 function moneyEmail(amountCents,currency="USD"){try{return new Intl.NumberFormat("en-US",{style:"currency",currency}).format(Number(amountCents||0)/100)}catch{return `${currency} ${(Number(amountCents||0)/100).toFixed(2)}`}}
@@ -249,21 +249,16 @@ function kycResponse(row){
   return {id:row.public_id,status:row.status,firstName:row.first_name,lastName:row.last_name,dateOfBirth:row.date_of_birth,nationality:row.nationality,documentType:row.document_type,documentLast4:String(row.document_number||"").slice(-4),documentFrontName:row.document_front_name||"",selfieName:row.selfie_name||"",address:row.address,city:row.city,country:row.country,submittedAt:row.submitted_at,reviewedAt:row.reviewed_at,reviewNote:row.review_note||""};
 }
 function maskedEmail(email){const [name,domain]=String(email).split("@");return `${name.slice(0,2)}${"*".repeat(Math.max(1,name.length-2))}@${domain}`}
-function isLocalDevelopmentRequest(req){
-  const hostname=String(req.headers.host||"").trim().toLowerCase().replace(/^\[/,"").replace(/\](?::\d+)?$/,"").replace(/:\d+$/,"");
-  return hostname==="localhost"||hostname==="127.0.0.1"||hostname==="::1";
-}
 async function issueVerificationCode(user,purpose,req,{force=false}={}){
-  const emailStatus=emailDeliveryStatus(),localDevelopment=isLocalDevelopmentRequest(req);
-  if((productionRuntime&&!emailStatus.configured)||(emailStatus.provider==="development"&&!localDevelopment))throw Object.assign(new Error("Email verification security is not configured."),{status:503});
+  const emailStatus=emailDeliveryStatus();
+  if(!emailStatus.configured||emailStatus.provider==="development")throw Object.assign(new Error("Email verification is unavailable until Zoho Mail is configured."),{status:503});
   const latest=db.prepare("SELECT created_at FROM email_verification_codes WHERE user_id=? AND purpose=? ORDER BY id DESC LIMIT 1").get(user.id,purpose);
   if(!force&&latest&&Date.now()-new Date(latest.created_at).getTime()<30000)throw Object.assign(new Error("Please wait 30 seconds before requesting another code."),{status:429});
   const code=String(crypto.randomInt(0,1000000)).padStart(6,"0"),timestamp=now(),expires=new Date(Date.now()+verificationCodeMinutes*60000).toISOString();
   db.prepare("UPDATE email_verification_codes SET used_at=? WHERE user_id=? AND purpose=? AND used_at IS NULL").run(timestamp,user.id,purpose);
   db.prepare("INSERT INTO email_verification_codes (user_id,purpose,code_hash,expires_at,requested_ip,created_at) VALUES (?,?,?,?,?,?)").run(user.id,purpose,verificationCodeHash(code),expires,requestIp(req),timestamp);
   try{await sendVerificationCode(user.email,code,purpose)}catch(error){console.error(error.message);throw Object.assign(new Error("We could not send the verification email. Please try again."),{status:502})}
-  const hasEmailProvider=emailStatus.configured&&emailStatus.provider!=="development";
-  return {developmentCode:!hasEmailProvider&&!productionRuntime&&localDevelopment?code:undefined,expiresInSeconds:verificationCodeMinutes*60};
+  return {expiresInSeconds:verificationCodeMinutes*60};
 }
 function verifyEmailCode(user,purpose,code){
   const record=db.prepare("SELECT * FROM email_verification_codes WHERE user_id=? AND purpose=? AND used_at IS NULL ORDER BY id DESC LIMIT 1").get(user.id,purpose);
@@ -278,7 +273,7 @@ function audit(actorId, action, entityType, entityId, details, req) {
 }
 
 async function api(req, res, url) {
-  if(req.method==="GET"&&url.pathname==="/api/health"){const email=emailDeliveryStatus(),ready=!productionRuntime||email.configured;return json(res,ready?200:503,{status:ready?"ok":"configuration_required",service:"stockprime",time:now(),email:{provider:email.provider,configured:email.configured,missing:email.missing}})}
+  if(req.method==="GET"&&url.pathname==="/api/health"){const email=emailDeliveryStatus(),ready=email.configured;return json(res,ready?200:503,{status:ready?"ok":"configuration_required",service:"stockprime",time:now(),email:{provider:email.provider,configured:email.configured,missing:email.missing}})}
   if(req.method==="GET"&&url.pathname==="/api/btc-price"){
     if(btcPriceCache.value&&Date.now()-btcPriceCache.cachedAt<30000)return json(res,200,btcPriceCache.value);
     try{

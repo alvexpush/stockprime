@@ -2,11 +2,8 @@
   const pagePurpose=document.body.dataset.purpose;
   let state;try{state=JSON.parse(sessionStorage.getItem("stockprimeVerification")||"null")}catch{state=null}
   if(!state?.email||state.purpose!==pagePurpose){location.replace(pagePurpose==="registration"?"register.html":"login.html");return}
-  const form=document.querySelector("[data-verification-form]"),input=form.code,message=document.querySelector("[data-message]"),resend=document.querySelector("[data-resend]"),dev=document.querySelector("[data-development-code]"),localDevelopment=["localhost","127.0.0.1","::1"].includes(location.hostname);
+  const form=document.querySelector("[data-verification-form]"),input=form.code,message=document.querySelector("[data-message]"),resend=document.querySelector("[data-resend]");
   document.querySelector("[data-email]").textContent=state.maskedEmail||state.email;
-  if(!localDevelopment){delete state.developmentCode;sessionStorage.setItem("stockprimeVerification",JSON.stringify(state));dev.remove()}
-  const showDevelopmentCode=code=>{if(!localDevelopment||!dev)return;if(!code){dev.hidden=true;return}dev.hidden=false;dev.innerHTML=`Local development code: <strong>${code}</strong>`;input.value=code};
-  showDevelopmentCode(state.developmentCode);
   const show=(text,type="")=>{message.textContent=text;message.className=`verify-message ${type}`};
   input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,6)});
   form.addEventListener("submit",async event=>{
@@ -24,6 +21,6 @@
   let remaining=0,timer;
   const tick=()=>{if(remaining<=0){resend.disabled=false;resend.textContent="Resend code";clearInterval(timer);return}resend.disabled=true;resend.textContent=`Resend in ${remaining--}s`};
   const cooldown=()=>{remaining=30;tick();timer=setInterval(tick,1000)};cooldown();
-  resend.onclick=async()=>{resend.disabled=true;show("Sending a new code…");try{const response=await fetch("/api/auth/resend-code",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({email:state.email,purpose:pagePurpose})}),data=await response.json();if(!response.ok)throw new Error(data.error||"A new code could not be sent.");state={...state,maskedEmail:data.maskedEmail||state.maskedEmail,developmentCode:data.developmentCode||""};sessionStorage.setItem("stockprimeVerification",JSON.stringify(state));showDevelopmentCode(state.developmentCode);show(data.message,"success");cooldown()}catch(error){show(error.message,"error");resend.disabled=false;resend.textContent="Resend code"}};
+  resend.onclick=async()=>{resend.disabled=true;show("Sending a new code…");try{const response=await fetch("/api/auth/resend-code",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({email:state.email,purpose:pagePurpose})}),data=await response.json();if(!response.ok)throw new Error(data.error||"A new code could not be sent.");state={...state,maskedEmail:data.maskedEmail||state.maskedEmail};sessionStorage.setItem("stockprimeVerification",JSON.stringify(state));show(data.message,"success");cooldown()}catch(error){show(error.message,"error");resend.disabled=false;resend.textContent="Resend code"}};
   input.focus();
 })();
