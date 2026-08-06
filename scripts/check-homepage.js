@@ -70,7 +70,7 @@ const base = process.env.BASE_URL || "http://127.0.0.1:3000";
       brokenImages: [...document.images].filter((image) => !image.complete || image.naturalWidth === 0).map((image) => image.src),
       sections: document.querySelectorAll("main > section").length,
       teamRemoved: !document.querySelector(".team-section"),
-      calculatorValue: document.querySelector("[data-usd]")?.value,
+      calculatorRemoved: !document.querySelector("[data-calculator]") && !document.querySelector("[data-btc]"),
       firstStrategyValue: document.querySelector("[data-count]")?.textContent,
       activityVisible: document.querySelector("[data-activity-toast]")?.classList.contains("show"),
       partnerCentered: Math.abs(document.querySelector(".partner-row").getBoundingClientRect().x + document.querySelector(".partner-row").getBoundingClientRect().width / 2 - innerWidth / 2) < 2,
@@ -86,7 +86,7 @@ const base = process.env.BASE_URL || "http://127.0.0.1:3000";
     console.log(viewport.name, result);
     await page.screenshot({ path: `data/stockprime-home-${viewport.name}.png`, fullPage: true });
 
-    if (result.horizontalOverflow || result.brokenImages.length || !result.loginTarget || !result.registerTarget || !result.teamRemoved || result.calculatorValue !== "$100,000.00" || result.firstStrategyValue !== "1,000.86" || !result.partnerCentered || !result.heroContained || !result.animatedBull || !result.fireEffect || !result.menuOpens || !result.chatWorks) {
+    if (result.horizontalOverflow || result.brokenImages.length || !result.loginTarget || !result.registerTarget || !result.teamRemoved || !result.calculatorRemoved || result.firstStrategyValue !== "1,000.86" || !result.partnerCentered || !result.heroContained || !result.animatedBull || !result.fireEffect || !result.menuOpens || !result.chatWorks) {
       process.exitCode = 1;
     }
   }

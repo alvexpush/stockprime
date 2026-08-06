@@ -74,6 +74,29 @@ db.exec(`
     sent_at TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS kyc_submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id TEXT NOT NULL UNIQUE,
+    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    date_of_birth TEXT NOT NULL,
+    nationality TEXT NOT NULL,
+    document_type TEXT NOT NULL,
+    document_number TEXT NOT NULL,
+    document_front_name TEXT,
+    selfie_name TEXT,
+    address TEXT NOT NULL,
+    city TEXT NOT NULL,
+    country TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending'
+      CHECK(status IN ('pending','approved','rejected','resubmission_required')),
+    review_note TEXT,
+    submitted_at TEXT NOT NULL,
+    reviewed_at TEXT,
+    updated_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     public_id TEXT NOT NULL UNIQUE,
@@ -292,6 +315,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash);
   CREATE INDEX IF NOT EXISTS idx_email_verification_user ON email_verification_codes(user_id,purpose,created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_email_deliveries_created ON email_deliveries(created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_kyc_status ON kyc_submissions(status,submitted_at DESC);
   CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_reset_tokens(token_hash);
   CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipient_user_id,created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user ON wallet_transactions(user_id, created_at DESC);
@@ -349,6 +373,8 @@ db.prepare("UPDATE users SET referral_code='REF-' || printf('%06d',id) WHERE ref
 db.prepare("INSERT OR IGNORE INTO affiliates (user_id,affiliate_id,status,created_at,updated_at) SELECT id,'AFF-' || public_id,'inactive',created_at,updated_at FROM users").run();
 
 db.prepare("UPDATE stock_orders SET annual_roi_bps=7000 WHERE annual_roi_bps<>7000").run();
+db.prepare("UPDATE investment_plans SET name='Technology Growth Fund',category='Technology',description='Diversified global technology growth portfolio.',updated_at=? WHERE lower(name) LIKE '%tesla%' OR lower(category) LIKE '%tesla%'").run(new Date().toISOString());
+db.prepare("DELETE FROM vehicles WHERE lower(make)='tesla' OR lower(title) LIKE '%tesla%' OR lower(model) LIKE '%tesla%'").run();
 
 const count = db.prepare("SELECT COUNT(*) AS count FROM investment_plans").get().count;
 if (count === 0) {
@@ -359,7 +385,7 @@ if (count === 0) {
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
   `);
   const plans = [
-    ["PLAN-TESLA-GROWTH","Tesla Growth Fund","Tesla-Focused",3550,10000,923,85,"High","active","Tesla-focused growth portfolio."],
+    ["PLAN-TECH-GROWTH","Technology Growth Fund","Technology",3550,10000,923,85,"High","active","Diversified global technology growth portfolio."],
     ["PLAN-SUSTAINABLE","Sustainable Energy ETF","ESG",1875,5000,480,65,"Medium","active","Diversified sustainable-energy exposure."],
     ["PLAN-GLOBAL-GROWTH","Global Growth Fund","Growth",1980,40000,640,75,"Medium","active","Global growth companies and themes."]
   ];
@@ -417,11 +443,7 @@ const vehicleCount = db.prepare("SELECT COUNT(*) AS count FROM vehicles").get().
 if (vehicleCount === 0) {
   const timestamp = new Date().toISOString();
   const insert = db.prepare("INSERT INTO vehicles (public_id,title,year,make,model,price_cents,mileage,color,image_path,status,featured,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,'available',1,?,?)");
-  const vehicles = [
-    ["VEH-MODEL-Y","2026 Model Y Long Range",2026,"Tesla","Model Y Long Range",5299000,18,"Ultra Red","images/Homepage-Promo-Meet-Model-Y-Desktop.avif"],
-    ["VEH-CYBERTRUCK","2026 Cybertruck AWD",2026,"Tesla","Cybertruck AWD",9999000,12,"Stainless Steel","images/Cybertruck-Terrain-Badge-Desktop-NA-SA-APAC.avif"],
-    ["VEH-MODEL-3","2025 Model 3 Performance",2025,"Tesla","Model 3 Performance",5499000,85,"Pearl White","images/tesla-hero.jpg"]
-  ];
+  const vehicles = [];
   db.exec("BEGIN IMMEDIATE");
   try {
     for (const vehicle of vehicles) insert.run(...vehicle,timestamp,timestamp);

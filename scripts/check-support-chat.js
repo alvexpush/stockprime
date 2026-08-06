@@ -30,7 +30,7 @@ async function request(url, options = {}) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: process.env.ADMIN_EMAIL || "admin@tesla.test",
+        email: process.env.ADMIN_EMAIL || "admin@stockprimeglobal.test",
         password: process.env.ADMIN_PASSWORD || "Admin123!",
       }),
     });
@@ -53,7 +53,7 @@ async function request(url, options = {}) {
     browser = await chromium.launch({ executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", headless: true });
     const context = await browser.newContext();
     await context.addCookies([{ name: cookieName, value: cookieValue, url: base }]);
-    await context.addInitScript((adminEmail) => localStorage.setItem("stockprimeAdminSession", JSON.stringify({ email: adminEmail, name: "Super Admin" })), process.env.ADMIN_EMAIL || "admin@tesla.test");
+    await context.addInitScript((adminEmail) => localStorage.setItem("stockprimeAdminSession", JSON.stringify({ email: adminEmail, name: "Super Admin" })), process.env.ADMIN_EMAIL || "admin@stockprimeglobal.test");
     const page = await context.newPage();
     await page.goto(`${base}/admin.html#support`, { waitUntil: "domcontentloaded" });
     await page.locator(`[data-support-conversation="${conversationId}"]`).waitFor({ timeout: 10000 });

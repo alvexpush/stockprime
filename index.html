@@ -126,17 +126,6 @@
 
     <section class="section utility-section">
       <div class="section-inner utility-grid">
-        <div class="calculator-panel">
-          <p class="eyebrow light">Live calculation tool</p>
-          <h2>Bitcoin To Currency Calculator New Currency New Lifestyle!</h2>
-          <p>Bitcoin remains the most popular cryptocurrency in the world at the moment</p>
-          <div class="calculator" data-calculator>
-            <label>Bitcoin amount<input type="number" min="0" step="0.01" value="1" data-btc></label>
-            <label>USD per Bitcoin<input type="number" min="0" step="0.01" placeholder="Live rate" readonly data-rate></label>
-            <label>Estimated USD value<input type="text" value="$0.00" readonly data-usd></label>
-          </div>
-          <div class="calculator-meta"><small class="calculator-status" data-rate-status>Loading current BTC rate...</small><button type="button" data-refresh-rate>Refresh rate</button></div>
-        </div>
         <div class="license-panel">
           <div class="license-image"><img src="images/home/license.jpg" alt="License Image"></div>
           <div><p class="eyebrow">Verification</p><h2>License</h2><button class="reveal-button" type="button" data-license-button>Click to Unveil Lincense Number</button><strong class="license-number" data-license-number>509649484937</strong></div>
@@ -229,55 +218,6 @@
       licenseNumber.classList.add('visible');
       licenseButton.hidden = true;
     });
-
-    const btcInput = document.querySelector('[data-btc]');
-    const rateInput = document.querySelector('[data-rate]');
-    const usdOutput = document.querySelector('[data-usd]');
-    const rateStatus = document.querySelector('[data-rate-status]');
-    const refreshRate = document.querySelector('[data-refresh-rate]');
-    let bitcoinRate = 0;
-    const renderConversion = () => {
-      usdOutput.value = bitcoinRate ? (Number(btcInput.value || 0) * bitcoinRate).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00';
-    };
-    btcInput.addEventListener('input', renderConversion);
-    rateInput.addEventListener('input', () => {
-      bitcoinRate = Number(rateInput.value || 0);
-      rateStatus.textContent = 'Using your entered BTC-USD rate';
-      renderConversion();
-    });
-    const loadBitcoinRate = async () => {
-      refreshRate.disabled = true;
-      rateStatus.textContent = 'Loading current BTC rate...';
-      try {
-        const response = await fetch('/api/btc-price');
-        if (!response.ok) throw new Error('Price unavailable');
-        const payload = await response.json();
-        bitcoinRate = Number(payload.amount);
-        rateInput.value = bitcoinRate.toFixed(2);
-        rateInput.readOnly = true;
-        rateStatus.textContent = `Current BTC-USD spot rate from ${payload.source}`;
-        renderConversion();
-      } catch {
-        try {
-          const response = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot');
-          if (!response.ok) throw new Error('Price unavailable');
-          const payload = await response.json();
-          bitcoinRate = Number(payload.data.amount);
-          rateInput.value = bitcoinRate.toFixed(2);
-          rateInput.readOnly = true;
-          rateStatus.textContent = 'Current BTC-USD spot rate from Coinbase';
-          renderConversion();
-        } catch {
-          rateInput.readOnly = false;
-          rateInput.placeholder = 'Enter BTC-USD rate';
-          rateStatus.textContent = 'Live rate unavailable. Enter a rate to calculate manually.';
-        }
-      } finally {
-        refreshRate.disabled = false;
-      }
-    };
-    refreshRate.addEventListener('click', loadBitcoinRate);
-    loadBitcoinRate();
 
     const animateCount = (element) => {
       const target = Number(element.dataset.count);

@@ -102,7 +102,7 @@ function currentUser(req) {
   const token = cookies(req).stockprime_session;
   if (!token) return null;
   return db.prepare(`
-    SELECT u.id,u.public_id,u.name,u.email,u.country,u.currency,u.status,u.created_at,u.referral_code,u.phone
+    SELECT u.id,u.public_id,u.name,u.email,u.country,u.currency,u.status,u.created_at,u.referral_code,u.phone,u.email_verified_at
     FROM sessions s JOIN users u ON u.id=s.user_id
     WHERE s.token_hash=? AND s.expires_at>? AND u.status='active' AND u.email_verified_at IS NOT NULL
   `).get(sha256(token), now()) || null;
@@ -149,12 +149,12 @@ async function sendZohoEmail({to,subject,html},retry=true){
 function configuredSecret(value){return Boolean(value)&&!/^(your_|generate_|change_|<)/i.test(String(value).trim())}
 async function sendTransactionalEmail(message){
   const provider=String(process.env.EMAIL_PROVIDER||"").toLowerCase();
-  const hasResend=configuredSecret(process.env.RESEND_API_KEY),activeProvider=provider==="zoho"?"zoho":hasResend?"resend":"development",deliveryId=publicId("EML"),timestamp=now();
+  const hasResend=configuredSecret(process.env.RESEND_API_KEY),activeProvider=provider==="development"?"development":provider==="zoho"?"zoho":provider==="resend"?"resend":hasResend?"resend":"development",deliveryId=publicId("EML"),timestamp=now();
   db.prepare("INSERT INTO email_deliveries (public_id,recipient,subject,kind,provider,status,created_at) VALUES (?,?,?,?,?,'pending',?)").run(deliveryId,message.to,message.subject,message.kind||"transactional",activeProvider,timestamp);
   try{
     let delivered=false;
-    if(provider==="zoho")delivered=await sendZohoEmail(message);
-    else if(hasResend){const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.AUTH_FROM_EMAIL||process.env.RESET_FROM_EMAIL||"StockPrime <onboarding@resend.dev>",to:[message.to],subject:message.subject,html:message.html}),signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error("Email could not be sent.");delivered=true}
+    if(activeProvider==="zoho")delivered=await sendZohoEmail(message);
+    else if(activeProvider==="resend"){if(!hasResend)throw new Error("Resend requires RESEND_API_KEY.");const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.AUTH_FROM_EMAIL||process.env.RESET_FROM_EMAIL||"StockPrime <onboarding@resend.dev>",to:[message.to],subject:message.subject,html:message.html}),signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error("Email could not be sent.");delivered=true}
     else if(process.env.NODE_ENV==="production")throw new Error("Email delivery is not configured.");
     db.prepare("UPDATE email_deliveries SET status=?,attempts=1,sent_at=? WHERE public_id=?").run(delivered?"sent":"skipped",delivered?now():null,deliveryId);
     return delivered;
@@ -165,11 +165,13 @@ async function sendTransactionalEmail(message){
 }
 function emailDeliveryStatus(){
   const provider=String(process.env.EMAIL_PROVIDER||"").trim().toLowerCase();
+  if(provider==="development")return {provider:"development",configured:process.env.NODE_ENV!=="production",missing:process.env.NODE_ENV==="production"?["EMAIL_PROVIDER"]:[]};
   if(provider==="zoho"){
     const required=["ZOHO_CLIENT_ID","ZOHO_CLIENT_SECRET","ZOHO_REFRESH_TOKEN","ZOHO_FROM_EMAIL",...(process.env.NODE_ENV==="production"?["OTP_SECRET"]:[])];
     const missing=required.filter(key=>!configuredSecret(process.env[key]));
     return {provider:"zoho",configured:missing.length===0,missing};
   }
+  if(provider==="resend"){const configured=configuredSecret(process.env.RESEND_API_KEY);return {provider:"resend",configured,missing:configured?[]:["RESEND_API_KEY"]}}
   if(configuredSecret(process.env.RESEND_API_KEY))return {provider:"resend",configured:true,missing:[]};
   return {provider:"development",configured:process.env.NODE_ENV!=="production",missing:process.env.NODE_ENV==="production"?["EMAIL_PROVIDER"]:[]};
 }
@@ -232,7 +234,12 @@ function createSession(user, req) {
   return token;
 }
 function userPayload(user) {
-  return { id:user.public_id, name:user.name, email:user.email, phone:user.phone||"", country:user.country, currency:user.currency, referralCode:user.referral_code, createdAt:user.created_at };
+  const kyc=db.prepare("SELECT status,submitted_at,reviewed_at,review_note FROM kyc_submissions WHERE user_id=?").get(user.id);
+  return { id:user.public_id, name:user.name, email:user.email, phone:user.phone||"", country:user.country, currency:user.currency, referralCode:user.referral_code, createdAt:user.created_at, emailVerified:Boolean(user.email_verified_at), kycStatus:kyc?.status||"not_submitted", kycSubmittedAt:kyc?.submitted_at||null, kycReviewedAt:kyc?.reviewed_at||null, kycReviewNote:kyc?.review_note||"" };
+}
+function kycResponse(row){
+  if(!row)return null;
+  return {id:row.public_id,status:row.status,firstName:row.first_name,lastName:row.last_name,dateOfBirth:row.date_of_birth,nationality:row.nationality,documentType:row.document_type,documentLast4:String(row.document_number||"").slice(-4),documentFrontName:row.document_front_name||"",selfieName:row.selfie_name||"",address:row.address,city:row.city,country:row.country,submittedAt:row.submitted_at,reviewedAt:row.reviewed_at,reviewNote:row.review_note||""};
 }
 function maskedEmail(email){const [name,domain]=String(email).split("@");return `${name.slice(0,2)}${"*".repeat(Math.max(1,name.length-2))}@${domain}`}
 async function issueVerificationCode(user,purpose,req,{force=false}={}){
@@ -269,7 +276,7 @@ async function api(req, res, url) {
       if(!Number.isFinite(amount)||amount<=0)throw new Error("The BTC-USD price is unavailable.");
       btcPriceCache.value={amount,currency:"USD",source:"Coinbase",updatedAt:now()};btcPriceCache.cachedAt=Date.now();
       return json(res,200,btcPriceCache.value);
-    }catch(error){console.error(`[btc price] ${error.message}`);throw Object.assign(new Error("The live BTC price is temporarily unavailable."),{status:502})}
+    }catch(error){console.warn(`[btc price] ${error.message}`);if(process.env.NODE_ENV!=="production")return json(res,503,{error:"The live BTC price is temporarily unavailable.",available:false});throw Object.assign(new Error("The live BTC price is temporarily unavailable."),{status:502})}
   }
   if (req.method !== "GET" && !sameOrigin(req)) return json(res, 403, { error:"Invalid request origin." });
 
@@ -401,7 +408,7 @@ async function api(req, res, url) {
     db.prepare("UPDATE users SET login_code_hash=?,updated_at=? WHERE id=?").run(await passwordHash(loginCode),now(),user.id);db.prepare("DELETE FROM sessions WHERE user_id=? AND token_hash<>?").run(user.id,sha256(cookies(req).stockprime_session));const emailSent=await safeTransactionalEmail({to:user.email,kind:"login_code_changed",subject:"Your StockPrime login code was changed",html:emailTemplate({eyebrow:"Security alert",title:"Login code changed",intro:"Your private six-digit StockPrime login code was changed successfully.",note:"Other signed-in sessions were closed. If you did not make this change, contact support immediately."})});return json(res,200,{message:"Login code changed successfully.",emailSent});
   }
   if(req.method==="POST"&&url.pathname==="/api/admin/login"){
-    const input=await body(req),email=String(input.email||"").trim().toLowerCase(),password=String(input.password||""),expectedEmail=String(process.env.ADMIN_EMAIL||"admin@tesla.test").toLowerCase(),expectedPassword=process.env.ADMIN_PASSWORD||"Admin123!";
+    const input=await body(req),email=String(input.email||"").trim().toLowerCase(),password=String(input.password||""),expectedEmail=String(process.env.ADMIN_EMAIL||"admin@stockprimeglobal.test").toLowerCase(),expectedPassword=process.env.ADMIN_PASSWORD||"Admin123!";
     if(email!==expectedEmail||password!==expectedPassword)return json(res,401,{error:"Incorrect administrator email or password."});const token=crypto.randomBytes(32).toString("base64url");adminSessions.set(sha256(token),{email,name:"Super Admin",expiresAt:Date.now()+8*3600000});return json(res,200,{message:"Administrator signed in.",admin:{email,name:"Super Admin",role:"Super Admin"}},{"Set-Cookie":adminCookie(token)});
   }
   if(req.method==="POST"&&url.pathname==="/api/admin/logout"){const token=cookies(req).stockprime_admin_session;if(token)adminSessions.delete(sha256(token));return json(res,200,{message:"Signed out."},{"Set-Cookie":clearAdminCookie()})}
@@ -432,7 +439,13 @@ async function api(req, res, url) {
     const admin=requireAdmin(req,res);if(!admin)return;const input=await body(req),status=String(input.status||"").toLowerCase(),note=String(input.note||"").trim(),id=decodeURIComponent(url.pathname.split("/")[4]);if(!["approved","rejected","paid"].includes(status))return json(res,422,{error:"Choose a valid withdrawal status."});const withdrawal=db.prepare("SELECT w.*,u.email,u.name FROM affiliate_withdrawals w JOIN users u ON u.id=w.user_id WHERE w.public_id=?").get(id);if(!withdrawal)return json(res,404,{error:"Pending withdrawal was not found."});const result=db.prepare("UPDATE affiliate_withdrawals SET status=?,admin_note=?,updated_at=? WHERE public_id=? AND status IN ('pending','approved')").run(status,note,now(),id);if(!result.changes)return json(res,409,{error:"This withdrawal can no longer be updated."});const emailSent=await sendWalletEventEmail(withdrawal,{type:"withdrawal",status,amountCents:withdrawal.amount_cents,currency:"USD",method:withdrawal.method,transactionId:id});return json(res,200,{message:`Affiliate withdrawal ${status}.`,emailSent});
   }
   if(req.method==="GET"&&url.pathname==="/api/admin/users"){
-    if(!requireAdmin(req,res))return;const users=db.prepare("SELECT public_id AS id,name,email,status,created_at AS joined FROM users ORDER BY created_at DESC").all();return json(res,200,{users:users.map(user=>({...user,status:user.status[0].toUpperCase()+user.status.slice(1),kyc:"Not Submitted"}))});
+    if(!requireAdmin(req,res))return;const users=db.prepare("SELECT u.public_id AS id,u.name,u.email,u.status,u.created_at AS joined,u.email_verified_at,k.status AS kyc_status FROM users u LEFT JOIN kyc_submissions k ON k.user_id=u.id ORDER BY u.created_at DESC").all();return json(res,200,{users:users.map(user=>({...user,status:user.status[0].toUpperCase()+user.status.slice(1),emailVerified:Boolean(user.email_verified_at),kyc:user.kyc_status||"not_submitted",email_verified_at:undefined,kyc_status:undefined}))});
+  }
+  if(req.method==="GET"&&url.pathname==="/api/admin/kyc"){
+    if(!requireAdmin(req,res))return;const submissions=db.prepare("SELECT k.*,u.public_id AS user_public_id,u.name AS user_name,u.email AS user_email FROM kyc_submissions k JOIN users u ON u.id=k.user_id ORDER BY CASE k.status WHEN 'pending' THEN 0 ELSE 1 END,k.submitted_at DESC").all();return json(res,200,{submissions:submissions.map(row=>({...kycResponse(row),userId:row.user_public_id,userName:row.user_name,userEmail:row.user_email}))});
+  }
+  if(req.method==="POST"&&/^\/api\/admin\/kyc\/[^/]+\/status$/.test(url.pathname)){
+    const admin=requireAdmin(req,res);if(!admin)return;const id=decodeURIComponent(url.pathname.split("/")[4]),input=await body(req),status=String(input.status||"").toLowerCase(),reviewNote=String(input.reviewNote||"").trim().slice(0,1000);if(!["approved","rejected","resubmission_required"].includes(status))return json(res,422,{error:"Choose a valid KYC review status."});const submission=db.prepare("SELECT k.*,u.email,u.name,u.public_id AS user_public_id FROM kyc_submissions k JOIN users u ON u.id=k.user_id WHERE k.public_id=?").get(id);if(!submission)return json(res,404,{error:"KYC submission was not found."});const timestamp=now();db.prepare("UPDATE kyc_submissions SET status=?,review_note=?,reviewed_at=?,updated_at=? WHERE public_id=?").run(status,reviewNote||null,timestamp,timestamp,id);db.prepare("INSERT INTO audit_logs (actor_type,actor_id,action,entity_type,entity_id,details_json,ip_address,created_at) VALUES ('admin',?,'reviewed_kyc','kyc_submission',?,?,?,?)").run(admin.email,id,JSON.stringify({status,reviewNote}),requestIp(req),timestamp);const label=status==="approved"?"approved":status==="rejected"?"not approved":"returned for resubmission",emailSent=await safeTransactionalEmail({to:submission.email,kind:`kyc_${status}`,subject:`Your StockPrime Global KYC application was ${label}`,html:emailTemplate({eyebrow:"Identity verification",title:`KYC application ${label}`,intro:status==="approved"?"Your identity verification has been approved.":"Your identity verification status has changed. Open your dashboard to review the details.",actionUrl:publicUrl(req,"/kyc.html"),actionLabel:"View KYC status",note:reviewNote||"Contact StockPrime Global support if you need help."})});return json(res,200,{message:`KYC application ${label}.`,status,emailSent});
   }
   if(req.method==="POST"&&url.pathname==="/api/admin/users/password"){
     const admin=requireAdmin(req,res);if(!admin)return;const input=await body(req),user=db.prepare("SELECT id,public_id,email FROM users WHERE public_id=?").get(String(input.userId||"")),password=String(input.password||"");
@@ -669,6 +682,20 @@ async function api(req, res, url) {
       investmentOrders:investmentOrders.map(order=>({...order,...investmentValue(order)})).slice(0,10),
       stockOrders:stocks.map(order=>({...order,...projectedValue(order.principal_cents,order.annual_roi_bps,order.created_at)})).slice(0,10)
     });
+  }
+  if(req.method==="GET"&&url.pathname==="/api/kyc"){
+    const user=requireUser(req,res);if(!user)return;const submission=db.prepare("SELECT * FROM kyc_submissions WHERE user_id=?").get(user.id);return json(res,200,{emailVerified:true,status:submission?.status||"not_submitted",submission:kycResponse(submission)});
+  }
+  if(req.method==="POST"&&url.pathname==="/api/kyc"){
+    const user=requireUser(req,res);if(!user)return;const input=await body(req),firstName=String(input.firstName||"").trim(),lastName=String(input.lastName||"").trim(),dateOfBirth=String(input.dateOfBirth||"").trim(),nationality=String(input.nationality||"").trim(),documentType=String(input.documentType||"").trim(),documentNumber=String(input.documentNumber||"").trim(),documentFrontName=String(input.documentFrontName||"").trim(),selfieName=String(input.selfieName||"").trim(),address=String(input.address||"").trim(),city=String(input.city||"").trim(),country=String(input.country||"").trim();
+    const existing=db.prepare("SELECT * FROM kyc_submissions WHERE user_id=?").get(user.id);if(existing?.status==="approved")return json(res,409,{error:"Your identity is already verified."});if(existing?.status==="pending")return json(res,409,{error:"Your KYC application is already awaiting review."});
+    if(firstName.length<1||firstName.length>80||lastName.length<1||lastName.length>80)return json(res,422,{error:"Enter your legal first and last name."});
+    const birthDate=new Date(`${dateOfBirth}T00:00:00Z`),adultCutoff=new Date();adultCutoff.setUTCFullYear(adultCutoff.getUTCFullYear()-18);if(!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)||Number.isNaN(birthDate.getTime())||birthDate>adultCutoff)return json(res,422,{error:"You must be at least 18 years old to submit KYC."});
+    if(nationality.length<2||nationality.length>80||country.length<2||country.length>80||city.length<2||city.length>100||address.length<5||address.length>240)return json(res,422,{error:"Complete your nationality and residential address."});
+    if(!["Passport","National ID","Driver's License"].includes(documentType)||documentNumber.length<4||documentNumber.length>80)return json(res,422,{error:"Enter a valid identity document."});
+    if(!documentFrontName||!selfieName||documentFrontName.length>255||selfieName.length>255)return json(res,422,{error:"Select your identity document and selfie."});
+    const timestamp=now(),id=existing?.public_id||publicId("KYC");db.prepare(`INSERT INTO kyc_submissions (public_id,user_id,first_name,last_name,date_of_birth,nationality,document_type,document_number,document_front_name,selfie_name,address,city,country,status,submitted_at,reviewed_at,review_note,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',?,NULL,NULL,?) ON CONFLICT(user_id) DO UPDATE SET first_name=excluded.first_name,last_name=excluded.last_name,date_of_birth=excluded.date_of_birth,nationality=excluded.nationality,document_type=excluded.document_type,document_number=excluded.document_number,document_front_name=excluded.document_front_name,selfie_name=excluded.selfie_name,address=excluded.address,city=excluded.city,country=excluded.country,status='pending',submitted_at=excluded.submitted_at,reviewed_at=NULL,review_note=NULL,updated_at=excluded.updated_at`).run(id,user.id,firstName,lastName,dateOfBirth,nationality,documentType,documentNumber,documentFrontName,selfieName,address,city,country,timestamp,timestamp);
+    audit(user.public_id,"submitted_kyc","kyc_submission",id,{documentType},req);const emailSent=await safeTransactionalEmail({to:user.email,kind:"kyc_submitted",subject:"Your StockPrime Global KYC application was received",html:emailTemplate({eyebrow:"Identity verification",title:"KYC application received",intro:"Your identity verification details were submitted and are now awaiting review.",actionUrl:publicUrl(req,"/kyc.html"),actionLabel:"View KYC status",note:"We will email you when the review status changes."})});return json(res,201,{message:"Your KYC application is awaiting review.",emailVerified:true,status:"pending",emailSent});
   }
   return json(res,404,{error:"API endpoint not found."});
 }
