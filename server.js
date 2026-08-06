@@ -266,7 +266,7 @@ function audit(actorId, action, entityType, entityId, details, req) {
 }
 
 async function api(req, res, url) {
-  if(req.method==="GET"&&url.pathname==="/api/health"){const email=emailDeliveryStatus(),ready=process.env.NODE_ENV!=="production"||email.configured;return json(res,ready?200:503,{status:ready?"ok":"configuration_required",service:"stockprime",time:now(),email:{provider:email.provider,configured:email.configured}})}
+  if(req.method==="GET"&&url.pathname==="/api/health"){const email=emailDeliveryStatus(),ready=process.env.NODE_ENV!=="production"||email.configured;return json(res,ready?200:503,{status:ready?"ok":"configuration_required",service:"stockprime",time:now(),email:{provider:email.provider,configured:email.configured,missing:email.missing}})}
   if(req.method==="GET"&&url.pathname==="/api/btc-price"){
     if(btcPriceCache.value&&Date.now()-btcPriceCache.cachedAt<30000)return json(res,200,btcPriceCache.value);
     try{
@@ -730,4 +730,4 @@ const server=http.createServer(async(req,res)=>{
   try{if(url.pathname.startsWith("/api/"))await api(req,res,url);else if(req.method==="GET"||req.method==="HEAD")staticFile(req,res,url);else json(res,405,{error:"Method not allowed."})}
   catch(error){console.error(error);json(res,error.status||500,{error:error.status?error.message:"The server could not complete this request."})}
 });
-server.listen(port,()=>console.log(`StockPrime running at http://localhost:${port}`));
+server.listen(port,()=>{const email=emailDeliveryStatus();console.log(`StockPrime running at http://localhost:${port}`);console.log(`Email provider: ${email.provider}; configured: ${email.configured}`);if(process.env.NODE_ENV==="production"&&!email.configured)console.error(`Production email configuration is incomplete. Missing: ${email.missing.join(", ")}`)});
