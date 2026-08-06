@@ -17,6 +17,7 @@ const server=spawn(process.execPath,["server.js"],{cwd:path.join(__dirname,"..")
     await page.goto(`${base}/register.html`);
     await page.fill("#first_name","Browser");await page.fill("#last_name","Verification");await page.fill("#email",email);await page.fill("#phone","+1 555 010 7392");await page.fill("#login_code",loginCode);await page.fill("#login_code_confirmation",loginCode);await page.selectOption("#country",{label:"Nigeria"});
     await page.click('button[type="submit"]');await page.waitForURL("**/register-confirm.html");
+    if(!(await page.locator(".delivery-tip").textContent()).includes("Spam"))throw new Error("Registration confirmation does not include inbox and spam guidance.");
     if(!/^\d{6}$/.test(await page.inputValue(".code-input")))throw new Error("Development registration code was not presented on the confirmation screen.");
     await page.click(".verify-submit");await page.waitForURL("**/dashboard.html");
     await page.evaluate(async()=>{await fetch("/api/logout",{method:"POST"});localStorage.removeItem("stockprimeSession")});

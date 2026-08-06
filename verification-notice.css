@@ -1,0 +1,25 @@
+.delivery-tip {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #eadba4;
+  border-radius: 5px;
+  background: #fff9e7;
+  text-align: left;
+}
+
+.delivery-tip strong,
+.delivery-tip span {
+  display: block;
+}
+
+.delivery-tip strong {
+  color: #75550a;
+  font-size: 12px;
+}
+
+.delivery-tip span {
+  margin-top: 4px;
+  color: #6d654e;
+  font-size: 11px;
+  line-height: 1.5;
+}
