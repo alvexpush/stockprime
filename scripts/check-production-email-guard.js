@@ -13,7 +13,7 @@ const server=spawn(process.execPath,["server.js"],{cwd:path.join(__dirname,"..")
   try{
     let health;
     for(let index=0;index<30;index++){try{const response=await fetch(`${base}/api/health`);health={status:response.status,payload:await response.json()};break}catch{}await wait(150)}
-    if(health?.status!==503||health.payload?.email?.configured!==false)throw new Error("Health check accepted missing email configuration.");
+    if(health?.status!==200||health.payload?.email?.configured!==false)throw new Error("Health check did not report the unavailable email configuration.");
     const status=await registerFromPublicHost({firstName:"Production",lastName:"Guard",email,phone:"+1 555 010 8831",loginCode:"483920",loginCodeConfirmation:"483920",country:"Nigeria",currency:"USD"});
     if(status!==503)throw new Error(`Public registration exposed a development verification path (${status}).`);
     if(db.prepare("SELECT 1 FROM users WHERE email=?").get(email))throw new Error("Failed production registration left an unusable account behind.");

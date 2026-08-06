@@ -273,7 +273,7 @@ function audit(actorId, action, entityType, entityId, details, req) {
 }
 
 async function api(req, res, url) {
-  if(req.method==="GET"&&url.pathname==="/api/health"){const email=emailDeliveryStatus(),ready=email.configured;return json(res,ready?200:503,{status:ready?"ok":"configuration_required",service:"stockprime",time:now(),email:{provider:email.provider,configured:email.configured,missing:email.missing}})}
+  if(req.method==="GET"&&url.pathname==="/api/health"){const email=emailDeliveryStatus();return json(res,200,{status:"ok",service:"stockprime",time:now(),email:{provider:email.provider,configured:email.configured,missing:email.missing}})}
   if(req.method==="GET"&&url.pathname==="/api/btc-price"){
     if(btcPriceCache.value&&Date.now()-btcPriceCache.cachedAt<30000)return json(res,200,btcPriceCache.value);
     try{
