@@ -411,25 +411,11 @@ const stagedPlans = [
 ];
 db.exec("BEGIN IMMEDIATE");
 try {
-  db.prepare("UPDATE investment_plans SET status='inactive'").run();
   const upsertPlan = db.prepare(`
     INSERT INTO investment_plans
       (public_id,name,category,nav_cents,minimum_cents,maximum_cents,daily_return_bps,duration_days,projected_return_bps,management_fee_bps,risk_level,status,description,created_at,updated_at)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    ON CONFLICT(public_id) DO UPDATE SET
-      name=excluded.name,
-      category=excluded.category,
-      nav_cents=excluded.nav_cents,
-      minimum_cents=excluded.minimum_cents,
-      maximum_cents=excluded.maximum_cents,
-      daily_return_bps=excluded.daily_return_bps,
-      duration_days=excluded.duration_days,
-      projected_return_bps=excluded.projected_return_bps,
-      management_fee_bps=excluded.management_fee_bps,
-      risk_level=excluded.risk_level,
-      status=excluded.status,
-      description=excluded.description,
-      updated_at=excluded.updated_at
+    ON CONFLICT(public_id) DO NOTHING
   `);
   const timestamp = new Date().toISOString();
   for (const plan of stagedPlans) upsertPlan.run(...plan,timestamp,timestamp);
