@@ -22,6 +22,7 @@ const adminSessions = new Map();
 const quoteCache = new Map();
 const newsCache = new Map();
 const btcPriceCache = { value:null, cachedAt:0 };
+const cryptoPriceCache = { prices:[], cachedAt:0, source:"" };
 const supportedStockSymbols = new Set(["AAPL","AMZN","GOOGL","JNJ","JPM","META","MSFT","NFLX","NVDA","TSLA"]);
 const yearMs = 365.25 * 24 * 60 * 60 * 1000;
 const verificationCodeMinutes = 10;
@@ -285,6 +286,19 @@ async function api(req, res, url) {
       return json(res,200,btcPriceCache.value);
     }catch(error){console.warn(`[btc price] ${error.message}`);if(!productionRuntime)return json(res,503,{error:"The live BTC price is temporarily unavailable.",available:false});throw Object.assign(new Error("The live BTC price is temporarily unavailable."),{status:502})}
   }
+  if(req.method==="GET"&&url.pathname==="/api/crypto-prices"){
+    const symbols=["BTC","ETH","SOL","DOGE","XRP","ADA","POL","LTC"];
+    if(cryptoPriceCache.prices.length&&Date.now()-cryptoPriceCache.cachedAt<60000)return json(res,200,{source:cryptoPriceCache.source,prices:cryptoPriceCache.prices,updatedAt:new Date(cryptoPriceCache.cachedAt).toISOString(),cacheSeconds:60});
+    let fresh=[],source="CoinGecko";
+    try{const ids={BTC:"bitcoin",ETH:"ethereum",SOL:"solana",DOGE:"dogecoin",XRP:"ripple",ADA:"cardano",POL:"polygon-ecosystem-token",LTC:"litecoin"},response=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${Object.values(ids).join(",")}&vs_currencies=usd`,{headers:{"Accept":"application/json","User-Agent":"StockPrime/1.0"},signal:AbortSignal.timeout(8000)});if(!response.ok)throw new Error(`CoinGecko returned ${response.status}.`);const payload=await response.json();fresh=symbols.map(symbol=>({symbol,price:Number(payload?.[ids[symbol]]?.usd)})).filter(item=>Number.isFinite(item.price)&&item.price>0)}catch{}
+    if(!fresh.length){source="Coinbase";const results=await Promise.allSettled(symbols.map(async symbol=>{const response=await fetch(`https://api.coinbase.com/v2/prices/${symbol}-USD/spot`,{headers:{"Accept":"application/json","User-Agent":"StockPrime/1.0"},signal:AbortSignal.timeout(8000)});if(!response.ok)throw new Error(`${symbol} price provider returned ${response.status}.`);const payload=await response.json(),price=Number(payload?.data?.amount);if(!Number.isFinite(price)||price<=0)throw new Error(`${symbol} price is unavailable.`);return {symbol,price}}));fresh=results.filter(result=>result.status==="fulfilled").map(result=>result.value)}
+    const previous=new Map(cryptoPriceCache.prices.map(item=>[item.symbol,item]));
+    for(const item of fresh)previous.set(item.symbol,item);
+    const prices=symbols.map(symbol=>previous.get(symbol)).filter(Boolean);
+    if(fresh.length){cryptoPriceCache.prices=prices;cryptoPriceCache.cachedAt=Date.now();cryptoPriceCache.source=source;return json(res,200,{source,prices,updatedAt:new Date(cryptoPriceCache.cachedAt).toISOString(),cacheSeconds:60,partial:fresh.length<symbols.length})}
+    if(prices.length)return json(res,200,{source:cryptoPriceCache.source,prices,updatedAt:new Date(cryptoPriceCache.cachedAt).toISOString(),cacheSeconds:60,stale:true});
+    return json(res,503,{error:"Live cryptocurrency prices are temporarily unavailable.",code:"CRYPTO_PRICES_UNAVAILABLE"});
+  }
   if (req.method !== "GET" && !sameOrigin(req)) return json(res, 403, { error:"Invalid request origin." });
 
   if(req.method==="POST"&&url.pathname==="/api/support/conversations"){
@@ -472,13 +486,15 @@ async function api(req, res, url) {
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       ON CONFLICT(public_id) DO UPDATE SET name=excluded.name,category=excluded.category,nav_cents=excluded.nav_cents,minimum_cents=excluded.minimum_cents,maximum_cents=excluded.maximum_cents,daily_return_bps=excluded.daily_return_bps,duration_days=excluded.duration_days,projected_return_bps=excluded.projected_return_bps,management_fee_bps=excluded.management_fee_bps,risk_level=excluded.risk_level,status=excluded.status,description=excluded.description,updated_at=excluded.updated_at`).run(planPublicId,name,category,nav,minimum,maximum,dailyReturnBps,durationDays,returnBps,feeBps,risk,status,description,timestamp,timestamp);
     db.prepare("INSERT INTO audit_logs (actor_type,actor_id,action,entity_type,entity_id,details_json,ip_address,created_at) VALUES ('admin',?,'saved_investment_plan','investment_plan',?,?,?,?)").run(admin.email,planPublicId,JSON.stringify({name,status,minimum,maximum,dailyReturnBps,durationDays,returnBps}),requestIp(req),timestamp);
-    return json(res,id?200:201,{message:id?"Investment plan updated.":"Investment plan created.",planId:planPublicId});
+    return json(res,id?200:201,{message:id?"Investment package updated.":"Investment package created.",planId:planPublicId});
   }
   if(req.method==="DELETE"&&/^\/api\/admin\/investment-plans\/[^/]+$/.test(url.pathname)){
-    const admin=requireAdmin(req,res);if(!admin)return;const planId=decodeURIComponent(url.pathname.split("/")[4]),timestamp=now(),result=db.prepare("UPDATE investment_plans SET status='inactive',updated_at=? WHERE public_id=?").run(timestamp,planId);
-    if(!result.changes)return json(res,404,{error:"Investment plan was not found."});
-    db.prepare("INSERT INTO audit_logs (actor_type,actor_id,action,entity_type,entity_id,details_json,ip_address,created_at) VALUES ('admin',?,'deactivated_investment_plan','investment_plan',?,'{}',?,?)").run(admin.email,planId,requestIp(req),timestamp);
-    return json(res,200,{message:"Investment plan deactivated."});
+    const admin=requireAdmin(req,res);if(!admin)return;const planId=decodeURIComponent(url.pathname.split("/")[4]),timestamp=now(),plan=db.prepare("SELECT id,name FROM investment_plans WHERE public_id=?").get(planId);
+    if(!plan)return json(res,404,{error:"Investment plan was not found."});
+    const orders=db.prepare("SELECT COUNT(*) count FROM investment_orders WHERE plan_id=?").get(plan.id).count,holdings=db.prepare("SELECT COUNT(*) count FROM holdings WHERE plan_id=?").get(plan.id).count,archived=orders>0||holdings>0;
+    if(archived)db.prepare("UPDATE investment_plans SET status='inactive',updated_at=? WHERE id=?").run(timestamp,plan.id);else db.prepare("DELETE FROM investment_plans WHERE id=?").run(plan.id);
+    db.prepare("INSERT INTO audit_logs (actor_type,actor_id,action,entity_type,entity_id,details_json,ip_address,created_at) VALUES ('admin',?,?,?,?,?,?,?)").run(admin.email,archived?"archived_investment_plan":"deleted_investment_plan","investment_plan",planId,JSON.stringify({name:plan.name,orders,holdings}),requestIp(req),timestamp);
+    return json(res,200,{message:archived?"This package has investment history, so it was safely archived.":"Investment package deleted permanently.",deleted:!archived,archived});
   }
   if(req.method==="GET"&&url.pathname==="/api/admin/payments"){
     if(!requireAdmin(req,res))return;

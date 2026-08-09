@@ -1,26 +1,24 @@
 (function(){
-  const marketFallback=[
-    {symbol:"BTC",price:0},{symbol:"ETH",price:0},{symbol:"SOL",price:0},{symbol:"DOGE",price:0},
-    {symbol:"XRP",price:0},{symbol:"ADA",price:0},{symbol:"POL",price:0},{symbol:"LTC",price:0}
-  ];
-  const marketTicker=document.createElement("div");
-  marketTicker.className="market-ticker";
-  marketTicker.setAttribute("role","status");
-  marketTicker.setAttribute("aria-label","Financial market ticker");
-  marketTicker.innerHTML='<div class="market-ticker-label">Crypto Prices</div><div class="market-ticker-window"><div class="market-ticker-track" data-market-ticker-track></div></div>';
-  document.body.prepend(marketTicker);
-  document.body.classList.add("has-market-ticker");
-  if(!document.querySelector(".topbar")&&!document.querySelector(".public-top-nav"))document.body.style.paddingTop="34px";
-  const renderTicker=quotes=>{
-    const items=quotes.map(item=>{
-      const change=Number(item.percentChange||0),down=change<0;
-      const price=Number(item.current??item.price),display=price>0?`$${price.toLocaleString("en-US",{maximumFractionDigits:price<10?4:2})}`:"Live";
-      return `<span class="market-ticker-item"><span class="market-ticker-symbol">${item.symbol}</span><span class="market-ticker-price">${display}</span></span>`;
-    }).join("");
-    marketTicker.querySelector("[data-market-ticker-track]").innerHTML=items+items;
-  };
-  renderTicker(marketFallback);
-  Promise.allSettled(["BTC","ETH","SOL","DOGE","XRP","ADA","POL","LTC"].map(async symbol=>{const response=await fetch(`https://api.coinbase.com/v2/prices/${symbol}-USD/spot`);if(!response.ok)throw new Error("Price unavailable");const data=await response.json();return {symbol,price:Number(data.data.amount)}})).then(results=>{const quotes=results.filter(result=>result.status==="fulfilled").map(result=>result.value);if(quotes.length)renderTicker(quotes)}).catch(()=>{});
+  const isAdmin=document.body.classList.contains("admin-body");
+  if(!isAdmin){
+    const symbols=["BTC","ETH","SOL","DOGE","XRP","ADA","POL","LTC"],marketTicker=document.createElement("div");
+    marketTicker.className="market-ticker";
+    marketTicker.setAttribute("role","status");
+    marketTicker.setAttribute("aria-label","Live cryptocurrency prices");
+    marketTicker.innerHTML='<div class="market-ticker-label">Crypto Prices</div><div class="market-ticker-window"><div class="market-ticker-track" data-market-ticker-track></div></div>';
+    document.body.prepend(marketTicker);
+    document.body.classList.add("has-market-ticker");
+    if(!document.querySelector(".topbar")&&!document.querySelector(".public-top-nav"))document.body.style.paddingTop="34px";
+    const renderTicker=(quotes,state="")=>{
+      const prices=new Map(quotes.map(item=>[item.symbol,Number(item.price)]));
+      const items=symbols.map(symbol=>{const price=prices.get(symbol),display=price>0?`$${price.toLocaleString("en-US",{minimumFractionDigits:price>=1?2:4,maximumFractionDigits:price<1?6:2})}`:state||"Unavailable";return `<span class="market-ticker-item"><span class="market-ticker-symbol">${symbol}</span><span class="market-ticker-price">${display}</span></span>`}).join("");
+      marketTicker.querySelector("[data-market-ticker-track]").innerHTML=items+items;
+    };
+    const loadPrices=async()=>{try{const response=await fetch("/api/crypto-prices",{headers:{"Accept":"application/json"}}),data=await response.json();if(!response.ok||!data.prices?.length)throw new Error(data.error||"Prices unavailable");renderTicker(data.prices);marketTicker.dataset.loaded="true"}catch{if(!marketTicker.dataset.loaded)renderTicker([],"Unavailable")}};
+    renderTicker([],"Loading…");
+    loadPrices();
+    setInterval(loadPrices,60000);
+  }
 
   const root=document.documentElement;
   const logos=[...document.querySelectorAll("img")].filter(image=>/StockPrime/i.test(image.alt||"")||/hhb7Yj6zdj7QzEX/i.test(image.src));

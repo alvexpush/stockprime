@@ -245,3 +245,11 @@
   .finance-copy a { font-size: 8px; }
   .overview-plan-row strong { font-size: 18px; }
 }
+
+/* Dashboard section order: chart first, account overview second. */
+.main { display: flex; flex-direction: column; }
+.welcome { order: 1; }
+.trading-card { order: 2; margin-bottom: 28px; }
+.account-overview { order: 3; }
+.dashboard-grid { order: 4; }
+.account-status-footer { order: 5; }

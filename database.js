@@ -400,14 +400,18 @@ if (count === 0) {
 }
 
 const stagedPlans = [
-  ["PLAN-BEGINNER-1A","Beginner Plan","Beginner",10000,10000,699900,500,1,500,0,"Low","active","A one-day entry plan for new investors."],
-  ["PLAN-BEGINNER-1B","Beginner Plan","Beginner",10000,10000,699900,500,1,500,0,"Low","active","A second one-day entry option with the same limits."],
-  ["PLAN-GOLD-3","Gold Plan","Gold",10000,700000,2999900,600,3,1800,0,"Medium","active","Three-day Gold investment term."],
-  ["PLAN-GOLD-7","Gold Plan","Gold",10000,700000,2499900,750,7,5250,0,"Medium","active","Seven-day Gold investment term."],
-  ["PLAN-PLATINUM-14","Platinum Plan","Platinum",10000,2500000,9999900,1000,14,14000,0,"High","active","Fourteen-day Platinum investment term."],
-  ["PLAN-PLATINUM-5","Platinum Plan","Platinum",10000,3000000,9999900,700,5,3500,0,"High","active","Five-day Platinum investment term."],
-  ["PLAN-DIAMOND-30","Diamond Plan","Diamond",10000,10000000,50000000,1250,30,37500,0,"High","active","Thirty-day Diamond investment term."],
-  ["PLAN-DIAMOND-7","Diamond Plan","Diamond",10000,10000000,50000000,800,7,5600,0,"High","active","Seven-day Diamond investment term."]
+  ["PLAN-BEGINNER-1A","Basic Starter","Basic",10000,10000,699900,500,1,500,0,"Low","active","A one-day entry package for new investors."],
+  ["PLAN-BEGINNER-1B","Basic Plus","Basic",10000,10000,699900,500,1,500,0,"Low","active","A flexible entry package for new investors."],
+  ["PLAN-BASIC-7","Basic Max","Basic",10000,25000,999900,550,7,3850,0,"Low","active","A seven-day Basic package with a wider funding range."],
+  ["PLAN-GOLD-3","Gold Starter","Gold",10000,700000,2999900,600,3,1800,0,"Medium","active","Three-day Gold investment term."],
+  ["PLAN-GOLD-7","Gold Plus","Gold",10000,700000,2499900,750,7,5250,0,"Medium","active","Seven-day Gold investment term."],
+  ["PLAN-GOLD-14","Gold Max","Gold",10000,1000000,4999900,800,14,11200,0,"Medium","active","Fourteen-day Gold investment term."],
+  ["PLAN-PLATINUM-5","Platinum Starter","Platinum",10000,3000000,9999900,700,5,3500,0,"High","active","Five-day Platinum investment term."],
+  ["PLAN-PLATINUM-14","Platinum Plus","Platinum",10000,2500000,9999900,1000,14,14000,0,"High","active","Fourteen-day Platinum investment term."],
+  ["PLAN-PLATINUM-30","Platinum Max","Platinum",10000,5000000,19999900,1100,30,33000,0,"High","active","Thirty-day Platinum investment term."],
+  ["PLAN-DIAMOND-7","Diamond Starter","Diamond",10000,10000000,50000000,800,7,5600,0,"High","active","Seven-day Diamond investment term."],
+  ["PLAN-DIAMOND-30","Diamond Plus","Diamond",10000,10000000,50000000,1250,30,37500,0,"High","active","Thirty-day Diamond investment term."],
+  ["PLAN-DIAMOND-60","Diamond Max","Diamond",10000,20000000,100000000,1400,60,84000,0,"High","active","Sixty-day Diamond investment term."]
 ];
 db.exec("BEGIN IMMEDIATE");
 try {
@@ -423,6 +427,24 @@ try {
 } catch (error) {
   db.exec("ROLLBACK");
   throw error;
+}
+
+if(!db.prepare("SELECT 1 FROM platform_settings WHERE key='investment_package_catalogue_v2'").get()){
+  const timestamp=new Date().toISOString();
+  const catalogue=[
+    ["Basic Starter","Basic","PLAN-BEGINNER-1A"],["Basic Plus","Basic","PLAN-BEGINNER-1B"],
+    ["Gold Starter","Gold","PLAN-GOLD-3"],["Gold Plus","Gold","PLAN-GOLD-7"],
+    ["Platinum Starter","Platinum","PLAN-PLATINUM-5"],["Platinum Plus","Platinum","PLAN-PLATINUM-14"],
+    ["Diamond Starter","Diamond","PLAN-DIAMOND-7"],["Diamond Plus","Diamond","PLAN-DIAMOND-30"]
+  ];
+  db.exec("BEGIN IMMEDIATE");
+  try{
+    const update=db.prepare("UPDATE investment_plans SET name=?,category=?,updated_at=? WHERE public_id=?");
+    for(const [name,category,id] of catalogue)update.run(name,category,timestamp,id);
+    db.prepare("UPDATE investment_plans SET status='inactive',updated_at=? WHERE public_id IN ('PLAN-TECH-GROWTH','PLAN-SUSTAINABLE','PLAN-GLOBAL-GROWTH')").run(timestamp);
+    db.prepare("INSERT INTO platform_settings (key,value,updated_at) VALUES ('investment_package_catalogue_v2','1',?)").run(timestamp);
+    db.exec("COMMIT");
+  }catch(error){db.exec("ROLLBACK");throw error}
 }
 
 const vehicleCount = db.prepare("SELECT COUNT(*) AS count FROM vehicles").get().count;
