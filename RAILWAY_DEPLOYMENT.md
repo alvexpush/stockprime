@@ -1,4 +1,4 @@
-# StockPrime Railway deployment
+# Vanguard Prime Railway deployment
 
 1. Create a new GitHub repository and push this project to it.
 2. In Railway, create a project from that GitHub repository.

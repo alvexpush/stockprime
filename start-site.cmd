@@ -1,5 +1,5 @@
 @echo off
-title StockPrime Global Launcher
+title Vanguard Prime Launcher
 cd /d "%~dp0"
 
 where node >nul 2>nul
@@ -11,8 +11,8 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo Starting StockPrime Global at http://localhost:3000
-start "StockPrime Global Server" cmd /k "cd /d ""%~dp0"" && node server.js"
+echo Starting Vanguard Prime at http://localhost:3000
+start "Vanguard Prime Server" cmd /k "cd /d ""%~dp0"" && node server.js"
 timeout /t 2 /nobreak >nul
 start "" "http://localhost:3000"
 exit /b 0

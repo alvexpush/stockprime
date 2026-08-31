@@ -1,6 +1,6 @@
 # Zoho Mail and Railway email setup
 
-StockPrime sends registration and sign-in codes through the Zoho Mail REST API over HTTPS. Railway hosts the application; Zoho hosts the mailbox and sends the email. SMTP, the mailbox password, and a Zoho app password are not required.
+Vanguard Prime sends registration and sign-in codes through the Zoho Mail REST API over HTTPS. Railway hosts the application; Zoho hosts the mailbox and sends the email. SMTP, the mailbox password, and a Zoho app password are not required.
 
 ## 1. Split the domain responsibilities
 
@@ -28,7 +28,7 @@ Do not copy MX or API host values from another Zoho region. Use the values displ
 ## 3. Create Zoho OAuth credentials
 
 1. Open the Zoho API Console in the same data center as the mailbox.
-2. Create a Self Client for backend automation. The mailbox password is never entered into StockPrime or Railway.
+2. Create a Self Client for backend automation. The mailbox password is never entered into Vanguard Prime or Railway.
 3. Generate an authorization grant with these scopes: `ZohoMail.messages.CREATE,ZohoMail.accounts.READ`.
 4. Exchange the grant for tokens using `access_type=offline` and save the refresh token.
 5. Record the Client ID and Client Secret. Treat all three values as production secrets.

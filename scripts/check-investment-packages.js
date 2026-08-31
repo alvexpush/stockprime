@@ -4,7 +4,7 @@ const fs=require("node:fs");
 const os=require("node:os");
 const path=require("node:path");
 
-const port=3223,base=`http://127.0.0.1:${port}`,databasePath=path.join(os.tmpdir(),`stockprime-package-crud-${process.pid}.sqlite`);
+const port=3223,base=`http://127.0.0.1:${port}`,databasePath=path.join(os.tmpdir(),`vanguardprime-package-crud-${process.pid}.sqlite`);
 const environment={...process.env,PORT:String(port),DATABASE_PATH:databasePath,NODE_ENV:"development",EMAIL_PROVIDER:"development",ADMIN_EMAIL:"package-admin@example.com",ADMIN_PASSWORD:"PackageAdmin123!"};
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 let server;

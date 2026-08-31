@@ -116,7 +116,7 @@ This project keeps third-party API keys on the Node server and exposes only app-
 FINNHUB_API_KEY="..."
 ALPHA_VANTAGE_API_KEY="..."
 RESEND_API_KEY="..."
-RESET_FROM_EMAIL="StockPrime <support@yourdomain.com>"
+RESET_FROM_EMAIL="Vanguard Prime <support@yourdomain.com>"
 ADMIN_EMAIL="admin@yourdomain.com"
 ADMIN_PASSWORD="use-a-strong-password"
 SESSION_DAYS="7"

@@ -40,7 +40,7 @@ const base = process.env.BASE_URL || "http://127.0.0.1:3000";
     await page.waitForTimeout(700);
     if (viewport.name === "mobile") {
       await page.waitForTimeout(1100);
-      await page.locator(".hero").screenshot({ path: "data/stockprime-hero-fire-mobile.png" });
+      await page.locator(".hero").screenshot({ path: "data/vanguardprime-hero-fire-mobile.png" });
     }
 
     await page.locator(".strategy-section").scrollIntoViewIfNeeded();
@@ -57,7 +57,7 @@ const base = process.env.BASE_URL || "http://127.0.0.1:3000";
     if (viewport.name === "desktop" || viewport.name === "mobile") {
       await page.locator("[data-chat-launcher]").click();
       chatWorks = await page.locator("[data-chat-panel]").evaluate((element) => !element.hidden && element.classList.contains("open"));
-      if (viewport.name === "mobile") await page.screenshot({ path: "data/stockprime-home-chat-mobile.png" });
+      if (viewport.name === "mobile") await page.screenshot({ path: "data/vanguardprime-home-chat-mobile.png" });
       await page.locator("[data-chat-close]").click();
     }
 
@@ -84,7 +84,7 @@ const base = process.env.BASE_URL || "http://127.0.0.1:3000";
     result.menuOpens = menuOpens;
     result.chatWorks = chatWorks;
     console.log(viewport.name, result);
-    await page.screenshot({ path: `data/stockprime-home-${viewport.name}.png`, fullPage: true });
+    await page.screenshot({ path: `data/vanguardprime-home-${viewport.name}.png`, fullPage: true });
 
     if (result.horizontalOverflow || result.brokenImages.length || !result.loginTarget || !result.registerTarget || !result.teamRemoved || !result.calculatorRemoved || result.firstStrategyValue !== "1,000.86" || !result.partnerCentered || !result.heroContained || !result.animatedBull || !result.fireEffect || !result.menuOpens || !result.chatWorks) {
       process.exitCode = 1;
@@ -97,7 +97,7 @@ const base = process.env.BASE_URL || "http://127.0.0.1:3000";
     await page.waitForTimeout(14500);
     const ctaVisible = await page.locator("[data-cta-modal]").evaluate((element) => !element.hidden && element.classList.contains("open"));
     console.log("timedCtaVisible", ctaVisible);
-    await page.screenshot({ path: "data/stockprime-home-cta-mobile.png" });
+    await page.screenshot({ path: "data/vanguardprime-home-cta-mobile.png" });
     if (!ctaVisible) process.exitCode = 1;
   }
 

@@ -6,7 +6,7 @@ const fs=require("node:fs");
 const os=require("node:os");
 const path=require("node:path");
 
-const stamp=Date.now(),port=3221,base=`http://127.0.0.1:${port}`,databasePath=path.join(os.tmpdir(),`stockprime-email-${stamp}.sqlite`),email=`email.flow.${stamp}@example.com`,oldCode="482615",newCode="739204";
+const stamp=Date.now(),port=3221,base=`http://127.0.0.1:${port}`,databasePath=path.join(os.tmpdir(),`vanguardprime-email-${stamp}.sqlite`),email=`email.flow.${stamp}@example.com`,oldCode="482615",newCode="739204";
 const environment={...process.env,PORT:String(port),NODE_ENV:"development",DATABASE_PATH:databasePath,EMAIL_PROVIDER:"",RESEND_API_KEY:"",OTP_SECRET:"email-flow-test-secret",ADMIN_EMAIL:"email-admin@example.com",ADMIN_PASSWORD:"EmailAdmin123!"};
 const server=spawn(process.execPath,["server.js"],{cwd:path.join(__dirname,".."),env:environment,stdio:"ignore",windowsHide:true});
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));

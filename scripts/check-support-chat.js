@@ -30,7 +30,7 @@ async function request(url, options = {}) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: process.env.ADMIN_EMAIL || "admin@stockprimeglobal.test",
+        email: process.env.ADMIN_EMAIL || "admin@vanguardprime.test",
         password: process.env.ADMIN_PASSWORD || "Admin123!",
       }),
     });
@@ -53,20 +53,20 @@ async function request(url, options = {}) {
     browser = await chromium.launch({ executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", headless: true });
     const context = await browser.newContext();
     await context.addCookies([{ name: cookieName, value: cookieValue, url: base }]);
-    await context.addInitScript((adminEmail) => localStorage.setItem("stockprimeAdminSession", JSON.stringify({ email: adminEmail, name: "Super Admin" })), process.env.ADMIN_EMAIL || "admin@stockprimeglobal.test");
+    await context.addInitScript((adminEmail) => localStorage.setItem("vanguardprimeAdminSession", JSON.stringify({ email: adminEmail, name: "Super Admin" })), process.env.ADMIN_EMAIL || "admin@vanguardprime.test");
     const page = await context.newPage();
     await page.goto(`${base}/admin.html#support`, { waitUntil: "domcontentloaded" });
     await page.locator(`[data-support-conversation="${conversationId}"]`).waitFor({ timeout: 10000 });
     await page.locator(`[data-support-conversation="${conversationId}"]`).click();
     await page.locator("[data-support-reply]").waitFor();
-    await page.screenshot({ path: "data/stockprime-admin-support.png", fullPage: true });
+    await page.screenshot({ path: "data/vanguardprime-admin-support.png", fullPage: true });
     const visitorContext = await browser.newContext();
-    await visitorContext.addInitScript((session) => localStorage.setItem("stockprimeSupportConversation", JSON.stringify(session)), { id: conversationId, token: visitorToken, status: "open" });
+    await visitorContext.addInitScript((session) => localStorage.setItem("vanguardprimeSupportConversation", JSON.stringify(session)), { id: conversationId, token: visitorToken, status: "open" });
     const visitorPage = await visitorContext.newPage();
     await visitorPage.goto(`${base}/index.html`, { waitUntil: "domcontentloaded" });
     await visitorPage.locator("[data-chat-launcher]").click();
     await visitorPage.locator("[data-chat-messages] p").filter({ hasText: "Automated admin reply" }).waitFor({ timeout: 10000 });
-    await visitorPage.screenshot({ path: "data/stockprime-home-support-reply.png" });
+    await visitorPage.screenshot({ path: "data/vanguardprime-home-support-reply.png" });
     console.log({ conversationCreated: true, adminInboxReceived: true, adminReplyReceived: true, adminUiRendered: true, visitorUiRendered: true, chronological: true, messageCount: visitorView.payload.messages.length });
   } finally {
     if (browser) await browser.close();

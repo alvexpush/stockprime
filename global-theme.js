@@ -21,9 +21,9 @@
   }
 
   const root=document.documentElement;
-  const logos=[...document.querySelectorAll("img")].filter(image=>/StockPrime/i.test(image.alt||"")||/hhb7Yj6zdj7QzEX/i.test(image.src));
+  const logos=[...document.querySelectorAll("img")].filter(image=>/Vanguard Prime/i.test(image.alt||"")||/hhb7Yj6zdj7QzEX/i.test(image.src));
   logos.forEach(image=>image.dataset.lightLogo=image.getAttribute("src"));
-  const apply=theme=>{root.dataset.theme=theme;localStorage.setItem("siteTheme",theme);logos.forEach(image=>{image.src="/images/stockprime-logo.png";image.setAttribute("data-brand-logo","")});document.querySelectorAll("[data-global-theme-control]").forEach(button=>{button.textContent=theme==="dark"?"☀":"☾";button.title=`Switch to ${theme==="dark"?"light":"dark"} mode`;button.setAttribute("aria-label",button.title)})};
+  const apply=theme=>{root.dataset.theme=theme;localStorage.setItem("siteTheme",theme);logos.forEach(image=>{image.src="/images/vanguardprime-logo.png";image.setAttribute("data-brand-logo","")});document.querySelectorAll("[data-global-theme-control]").forEach(button=>{button.textContent=theme==="dark"?"☀":"☾";button.title=`Switch to ${theme==="dark"?"light":"dark"} mode`;button.setAttribute("aria-label",button.title)})};
   const toggle=()=>apply(root.dataset.theme==="dark"?"light":"dark");
   window.toggleTheme=toggle;
   let control=document.querySelector("[data-theme-toggle], .top-actions button:first-child, [onclick*='toggleTheme']");

@@ -1,5 +1,5 @@
 (function(){
-  const storageKey="stockprimeSupportConversation";
+  const storageKey="vanguardprimeSupportConversation";
   let supportSession;
   try{supportSession=JSON.parse(localStorage.getItem(storageKey)||"null")}catch{supportSession=null}
 
@@ -7,7 +7,7 @@
   const layer=document.createElement("div");
   layer.className="support-chat-layer";
   layer.hidden=true;
-  layer.innerHTML='<section class="support-chat" role="dialog" aria-modal="true" aria-label="Support Chat"><header class="support-chat-head"><span class="support-agent-dot">&#9679;</span><div><b>StockPrime Support</b><small>Replies appear here automatically</small></div><button type="button" aria-label="Close support chat" data-support-close>&times;</button></header><div class="support-messages" data-support-messages></div><form class="support-chat-form"><input required maxlength="500" placeholder="Type your message..." aria-label="Message"><button>Send</button></form></section>';
+  layer.innerHTML='<section class="support-chat" role="dialog" aria-modal="true" aria-label="Support Chat"><header class="support-chat-head"><span class="support-agent-dot">&#9679;</span><div><b>Vanguard Prime Support</b><small>Replies appear here automatically</small></div><button type="button" aria-label="Close support chat" data-support-close>&times;</button></header><div class="support-messages" data-support-messages></div><form class="support-chat-form"><input required maxlength="500" placeholder="Type your message..." aria-label="Message"><button>Send</button></form></section>';
   document.body.appendChild(layer);
   const launch=document.createElement("button");
   launch.className="support-bot-launch";

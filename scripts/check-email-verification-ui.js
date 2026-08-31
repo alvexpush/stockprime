@@ -20,7 +20,7 @@ const server=spawn(process.execPath,["server.js"],{cwd:path.join(__dirname,"..")
     if(!(await page.locator(".delivery-tip").textContent()).includes("Spam"))throw new Error("Registration confirmation does not include inbox and spam guidance.");
     if(!/^\d{6}$/.test(await page.inputValue(".code-input")))throw new Error("Development registration code was not presented on the confirmation screen.");
     await page.click(".verify-submit");await page.waitForURL("**/dashboard.html");
-    await page.evaluate(async()=>{await fetch("/api/logout",{method:"POST"});localStorage.removeItem("stockprimeSession")});
+    await page.evaluate(async()=>{await fetch("/api/logout",{method:"POST"});localStorage.removeItem("vanguardprimeSession")});
     await page.goto(`${base}/login.html`);await page.fill("#email",email);await page.fill("#login_code",loginCode);await page.click('button[type="submit"]');await page.waitForURL("**/login-confirm.html");
     if(!/^\d{6}$/.test(await page.inputValue(".code-input")))throw new Error("Development login code was not presented on the confirmation screen.");
     await page.click(".verify-submit");await page.waitForURL("**/dashboard.html");

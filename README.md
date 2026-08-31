@@ -1,4 +1,4 @@
-# StockPrime
+# Vanguard Prime
 
 ## Run locally
 
