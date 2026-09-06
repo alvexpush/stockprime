@@ -127,8 +127,8 @@
     <section class="section utility-section">
       <div class="section-inner utility-grid">
         <div class="license-panel">
-          <div class="license-image"><img src="images/home/license.jpg" alt="License Image"></div>
-          <div><p class="eyebrow">Verification</p><h2>License</h2><button class="reveal-button" type="button" data-license-button>Click to Unveil Lincense Number</button><strong class="license-number" data-license-number>509649484937</strong></div>
+          <div class="license-image"><img src="images/home/incorporation-certificate.jpg" alt="Vanguard Prime Ledger certificate of incorporation"></div>
+          <div><p class="eyebrow">Company document</p><h2>Certificate of Incorporation</h2><a class="reveal-button" href="images/home/incorporation-certificate.jpg" target="_blank" rel="noopener">View Certificate</a></div>
         </div>
       </div>
     </section>
@@ -214,7 +214,7 @@
 
     const licenseButton = document.querySelector('[data-license-button]');
     const licenseNumber = document.querySelector('[data-license-number]');
-    licenseButton.addEventListener('click', () => {
+    licenseButton?.addEventListener('click', () => {
       licenseNumber.classList.add('visible');
       licenseButton.hidden = true;
     });

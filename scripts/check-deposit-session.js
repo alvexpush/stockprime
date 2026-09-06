@@ -6,7 +6,7 @@ const path=require("node:path");
 const crypto=require("node:crypto");
 
 const port=3224,base=`http://127.0.0.1:${port}`,databasePath=path.join(os.tmpdir(),`vanguardprime-deposit-session-${process.pid}.sqlite`),email=`deposit.session.${Date.now()}@example.com`;
-const environment={...process.env,PORT:String(port),DATABASE_PATH:databasePath,NODE_ENV:"development",EMAIL_PROVIDER:"development",BTC_DEPOSIT_ADDRESS:"bc1qtestdepositaddress000000000000000000000",USDT_DEPOSIT_ADDRESS:"0x1111111111111111111111111111111111111111",USDT_DEPOSIT_NETWORK:"Ethereum (ERC-20)"};
+const environment={...process.env,ADMIN_EMAIL:"wallet-admin@example.com",ADMIN_PASSWORD:"WalletTest123!",PORT:String(port),DATABASE_PATH:databasePath,NODE_ENV:"development",EMAIL_PROVIDER:"development",BTC_DEPOSIT_ADDRESS:"bc1qtestdepositaddress000000000000000000000",USDT_DEPOSIT_ADDRESS:"0x1111111111111111111111111111111111111111",USDT_DEPOSIT_NETWORK:"Ethereum (ERC-20)"};
 process.env.DATABASE_PATH=databasePath;const db=require("../database");
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));let server;
 const post=(url,payload,cookie="")=>fetch(base+url,{method:"POST",headers:{"Content-Type":"application/json",...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(payload)});
@@ -14,6 +14,17 @@ const post=(url,payload,cookie="")=>fetch(base+url,{method:"POST",headers:{"Cont
 (async()=>{try{
   server=spawn(process.execPath,["server.js"],{cwd:path.join(__dirname,".."),env:environment,stdio:"ignore",windowsHide:true});for(let i=0;i<40;i++){try{if((await fetch(`${base}/api/health`)).ok)break}catch{}await wait(150)}
   const timestamp=new Date().toISOString(),user=db.prepare("INSERT INTO users (public_id,name,email,password_hash,country,currency,email_verified_at,created_at,updated_at) VALUES (?,?,?,?,?,'USD',?,?,?)").run(`USR-${crypto.randomUUID()}`,"Deposit Session",email,"test-hash","Nigeria",timestamp,timestamp,timestamp),token=crypto.randomBytes(32).toString("base64url"),tokenHash=crypto.createHash("sha256").update(token).digest("hex");db.prepare("INSERT INTO wallets (user_id,currency,created_at,updated_at) VALUES (?,'USD',?,?)").run(user.lastInsertRowid,timestamp,timestamp);db.prepare("INSERT INTO sessions (user_id,token_hash,expires_at,created_at) VALUES (?,?,?,?)").run(user.lastInsertRowid,tokenHash,new Date(Date.now()+3600000).toISOString(),timestamp);const cookie=`vanguardprime_session=${token}`;
+  const denied=await post('/api/admin/deposit-wallets',{},cookie);if(denied.status!==401)throw new Error('User can edit admin wallets');
+  const login=await post('/api/admin/login',{email:environment.ADMIN_EMAIL,password:environment.ADMIN_PASSWORD});const adminCookie=login.headers.get('set-cookie').split(';')[0];
+  const wallets=Object.fromEntries(['BTC','USDT','ETH','LTC'].map(symbol=>[symbol,{address:'test-address-'+symbol,network:symbol==='USDT'?'Ethereum (ERC-20)':symbol==='BTC'?'Bitcoin':symbol}]));
+  const save=await post('/api/admin/deposit-wallets',{wallets},adminCookie);if(save.status!==200)throw new Error('Wallet save failed');
+  const saved=db.prepare("SELECT value FROM platform_settings WHERE key='deposit_wallet_ETH'").get();if(JSON.parse(saved.value).address!==wallets.ETH.address)throw new Error('Wallet not persisted');
+  for(const [symbol,method] of [['BTC','Bitcoin'],['USDT','USDT'],['ETH','Ethereum'],['LTC','Litecoin']]){
+    const response=await post('/api/wallet/deposit-session',{symbol,amount:25},cookie),session=await response.json();if(response.status!==201||session.asset.address!==wallets[symbol].address)throw new Error(symbol+' admin address not served');
+    const direct=await post('/api/wallet/deposits',{amount:25,method,reference:'missing-session'},cookie);if(direct.status!==409)throw new Error(symbol+' missing session accepted');
+    const submitted=await post('/api/wallet/deposits',{amount:25,method,reference:'test-hash-'+symbol,sessionId:session.sessionId},cookie);if(submitted.status!==201)throw new Error(symbol+' deposit failed');
+  }
+  console.log('PASS admin authorization, persisted wallet settings, and all four deposit currencies');
   const direct=await post("/api/wallet/deposits",{amount:100,method:"Bitcoin",reference:"direct-payment-test"},cookie),directData=await direct.json();if(direct.status!==409||directData.code!=="DEPOSIT_SESSION_REQUIRED")throw new Error("Crypto deposit was accepted without a payment session.");
   const btcResponse=await post("/api/wallet/deposit-session",{symbol:"BTC",amount:100},cookie),btc=await btcResponse.json();if(btcResponse.status!==201||btc.asset.network!=="Bitcoin"||!btc.sessionId)throw new Error("BTC payment session was not created.");
   const deposit=await post("/api/wallet/deposits",{amount:100,method:"Bitcoin",reference:"session-payment-test",sessionId:btc.sessionId},cookie);if(deposit.status!==201)throw new Error(`Valid payment session was rejected: ${JSON.stringify(await deposit.json())}`);
