@@ -378,4 +378,13 @@ button, input { font: inherit; }
 }
 
 /* Keep the complete certificate visible at every screen size. */
-.license-image img { display: block; height: auto; object-fit: contain; }
+.license-image { min-height: 0; background: #fff; }
+.license-image img { display: block; width: 100%; height: auto; object-fit: contain; }
+.license-panel { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+.license-panel > div:last-child { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; min-width: 0; }
+.license-panel .eyebrow { margin: 0; }
+.license-panel .reveal-button { display: inline-flex; justify-content: center; align-items: center; margin: 0; max-width: 100%; text-align: center; line-height: 1.5; }
+@media (max-width: 760px) {
+  .license-panel { grid-template-columns: minmax(0, 1fr); }
+  .license-panel > div:last-child { align-items: center; padding: 28px 20px; text-align: center; }
+}
